@@ -90,16 +90,16 @@ public class DashboardVO {
 
     public static class NameValueItem {
         private String name;
-        private Object value;
+        private Long value;
 
         public NameValueItem() {}
-        public NameValueItem(String name, Object value) { this.name = name; this.value = value; }
+        public NameValueItem(String name, Long value) { this.name = name; this.value = value; }
 
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
 
-        public Object getValue() { return value; }
-        public void setValue(Object value) { this.value = value; }
+        public Long getValue() { return value; }
+        public void setValue(Long value) { this.value = value; }
     }
 
     public static class MonthlyTrendItem {

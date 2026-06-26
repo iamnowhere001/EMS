@@ -1,51 +1,37 @@
 <template>
-  <div class="dashboard-page">
+  <div class="dashboard-page ems-page">
     <!-- 顶部 KPI -->
     <div class="kpi-row">
-      <div class="kpi-card kpi-primary">
+      <div
+        class="kpi-card"
+        v-for="(item, index) in kpiList"
+        :key="item.key"
+        :class="['kpi-' + item.tone, 'kpi-anim']"
+        :style="{ animationDelay: index * 80 + 'ms' }"
+      >
+        <div class="kpi-glow" :style="{ background: item.glow }"></div>
         <div class="kpi-icon">
-          <el-icon><UserFilled /></el-icon>
+          <el-icon><component :is="item.icon" /></el-icon>
         </div>
         <div class="kpi-info">
-          <div class="kpi-label">员工总数</div>
-          <div class="kpi-value">{{ data.kpi?.totalCount ?? 0 }}</div>
-          <div class="kpi-sub">在职 {{ data.kpi?.activeCount ?? 0 }} · 离职 {{ data.kpi?.leftCount ?? 0 }}</div>
-        </div>
-      </div>
-      <div class="kpi-card kpi-success">
-        <div class="kpi-icon"><el-icon><CircleCheckFilled /></el-icon></div>
-        <div class="kpi-info">
-          <div class="kpi-label">本月入职</div>
-          <div class="kpi-value">{{ data.kpi?.newHireThisMonth ?? 0 }}</div>
-          <div class="kpi-sub">近 12 月趋势见下方</div>
-        </div>
-      </div>
-      <div class="kpi-card kpi-warning">
-        <div class="kpi-icon"><el-icon><OfficeBuilding /></el-icon></div>
-        <div class="kpi-info">
-          <div class="kpi-label">部门数量</div>
-          <div class="kpi-value">{{ data.kpi?.departmentCount ?? 0 }}</div>
-          <div class="kpi-sub">平均工龄 {{ data.kpi?.avgTenureYears ?? 0 }} 年</div>
-        </div>
-      </div>
-      <div class="kpi-card kpi-danger">
-        <div class="kpi-icon"><el-icon><Money /></el-icon></div>
-        <div class="kpi-info">
-          <div class="kpi-label">月度薪资</div>
-          <div class="kpi-value">¥ {{ formatNum(data.kpi?.totalSalary) }}</div>
-          <div class="kpi-sub">平均 ¥ {{ formatNum(data.kpi?.avgSalary) }} / 人</div>
+          <div class="kpi-label">{{ item.label }}</div>
+          <div class="kpi-value ems-mono">{{ item.display }}</div>
+          <div class="kpi-sub">{{ item.sub }}</div>
         </div>
       </div>
     </div>
 
     <!-- 第一行：核心分布与趋势 -->
-    <el-row :gutter="10" class="chart-row">
+    <el-row :gutter="14" class="chart-row">
       <el-col :span="8">
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span class="chart-title">部门人员分布</span>
-              <el-tag size="small" type="info" effect="plain">在职员工</el-tag>
+              <div class="chart-title">
+                <span class="chart-title-dot" style="background: #6366f1"></span>
+                部门人员分布
+              </div>
+              <el-tag size="small" type="primary" effect="light" round>在职员工</el-tag>
             </div>
           </template>
           <v-chart :option="deptOption" autoresize style="height: 240px" />
@@ -55,7 +41,10 @@
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span class="chart-title">月度入职趋势</span>
+              <div class="chart-title">
+                <span class="chart-title-dot" style="background: #8b5cf6"></span>
+                月度入职趋势
+              </div>
               <span class="chart-sub">最近 12 个月</span>
             </div>
           </template>
@@ -66,7 +55,10 @@
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span class="chart-title">性别比例</span>
+              <div class="chart-title">
+                <span class="chart-title-dot" style="background: #10b981"></span>
+                性别比例
+              </div>
             </div>
           </template>
           <v-chart :option="genderOption" autoresize style="height: 240px" />
@@ -75,12 +67,15 @@
     </el-row>
 
     <!-- 第二行：薪资与职级 -->
-    <el-row :gutter="10" class="chart-row">
+    <el-row :gutter="14" class="chart-row">
       <el-col :span="14">
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span class="chart-title">部门薪资统计</span>
+              <div class="chart-title">
+                <span class="chart-title-dot" style="background: #0ea5e9"></span>
+                部门薪资统计
+              </div>
               <span class="chart-sub">在职员工 · 按总薪资降序</span>
             </div>
           </template>
@@ -91,7 +86,10 @@
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span class="chart-title">薪资区间分布</span>
+              <div class="chart-title">
+                <span class="chart-title-dot" style="background: #f59e0b"></span>
+                薪资区间分布
+              </div>
             </div>
           </template>
           <v-chart :option="salaryOption" autoresize style="height: 240px" />
@@ -100,12 +98,15 @@
     </el-row>
 
     <!-- 第三行：员工画像 -->
-    <el-row :gutter="10" class="chart-row">
+    <el-row :gutter="14" class="chart-row">
       <el-col :span="6">
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span class="chart-title">年龄分布</span>
+              <div class="chart-title">
+                <span class="chart-title-dot" style="background: #10b981"></span>
+                年龄分布
+              </div>
             </div>
           </template>
           <v-chart :option="ageOption" autoresize style="height: 220px" />
@@ -115,7 +116,10 @@
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span class="chart-title">工龄分布</span>
+              <div class="chart-title">
+                <span class="chart-title-dot" style="background: #f59e0b"></span>
+                工龄分布
+              </div>
             </div>
           </template>
           <v-chart :option="tenureOption" autoresize style="height: 220px" />
@@ -125,7 +129,10 @@
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span class="chart-title">学历分布</span>
+              <div class="chart-title">
+                <span class="chart-title-dot" style="background: #8b5cf6"></span>
+                学历分布
+              </div>
             </div>
           </template>
           <v-chart :option="educationOption" autoresize style="height: 220px" />
@@ -135,7 +142,10 @@
         <el-card class="chart-card" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span class="chart-title">职级分布</span>
+              <div class="chart-title">
+                <span class="chart-title-dot" style="background: #f43f5e"></span>
+                职级分布
+              </div>
             </div>
           </template>
           <v-chart :option="rankOption" autoresize style="height: 220px" />
@@ -174,18 +184,70 @@ const fetchData = async () => {
 
 onMounted(fetchData)
 
+// ============ KPI 列表(数据驱动) ============
+const kpiList = computed(() => [
+  {
+    key: 'total',
+    label: '员工总数',
+    display: data.value.kpi?.totalCount?.toLocaleString() ?? '0',
+    sub: `在职 ${data.value.kpi?.activeCount ?? 0} · 离职 ${data.value.kpi?.leftCount ?? 0}`,
+    icon: UserFilled,
+    tone: 'primary',
+    glow: 'radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.18), transparent 60%)',
+  },
+  {
+    key: 'new',
+    label: '本月入职',
+    display: data.value.kpi?.newHireThisMonth?.toLocaleString() ?? '0',
+    sub: '近 12 月趋势见下方',
+    icon: CircleCheckFilled,
+    tone: 'success',
+    glow: 'radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.18), transparent 60%)',
+  },
+  {
+    key: 'dept',
+    label: '部门数量',
+    display: data.value.kpi?.departmentCount?.toLocaleString() ?? '0',
+    sub: `平均工龄 ${data.value.kpi?.avgTenureYears ?? 0} 年`,
+    icon: OfficeBuilding,
+    tone: 'warning',
+    glow: 'radial-gradient(circle at 100% 0%, rgba(245, 158, 11, 0.18), transparent 60%)',
+  },
+  {
+    key: 'salary',
+    label: '月度薪资',
+    display: '¥ ' + formatNum(data.value.kpi?.totalSalary),
+    sub: `平均 ¥ ${formatNum(data.value.kpi?.avgSalary)} / 人`,
+    icon: Money,
+    tone: 'danger',
+    glow: 'radial-gradient(circle at 100% 0%, rgba(244, 63, 94, 0.18), transparent 60%)',
+  },
+])
+
 // ============ 通用配色 ============
-const COLORS = ['#5B8FF9', '#5AD8A6', '#FFD666', '#F4664A', '#9270CA', '#6DC8EC', '#FF99C3', '#269A99', '#FF9D4D', '#A1A0F8']
-const genderColors = ['#5B8FF9', '#F4664A']
+const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#0ea5e9', '#ec4899', '#06b6d4', '#84cc16', '#a855f7']
+const genderColors = ['#6366f1', '#f43f5e']
+
+// ============ ECharts 主题色（与设计令牌联动） ============
+const textColor = '#57534e'
+const subTextColor = '#a8a29e'
+const splitLineColor = 'rgba(0, 0, 0, 0.05)'
 
 // ============ 部门分布：横向条形图 ============
 const deptOption = computed(() => {
   const items = data.value.departmentDistribution || []
   return {
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      backgroundColor: 'rgba(28, 25, 23, 0.95)',
+      borderWidth: 0,
+      textStyle: { color: '#fff', fontSize: 12 },
+      padding: [8, 12],
+    },
     grid: { left: 80, right: 40, top: 10, bottom: 10, containLabel: true },
-    xAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } }, axisLabel: { color: '#94a3b8' } },
-    yAxis: { type: 'category', data: items.map(i => i.name), axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: '#475569', fontWeight: 500 } },
+    xAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: splitLineColor } }, axisLabel: { color: subTextColor } },
+    yAxis: { type: 'category', data: items.map(i => i.name), axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: textColor, fontWeight: 500 } },
     series: [{
       type: 'bar',
       data: items.map((i, idx) => ({
@@ -194,17 +256,17 @@ const deptOption = computed(() => {
           color: {
             type: 'linear', x: 0, y: 0, x2: 1, y2: 0,
             colorStops: [
-              { offset: 0, color: COLORS[idx % COLORS.length] + '88' },
+              { offset: 0, color: COLORS[idx % COLORS.length] + 'AA' },
               { offset: 1, color: COLORS[idx % COLORS.length] }
             ]
           },
-          borderRadius: [0, 10, 10, 0]
+          borderRadius: [0, 8, 8, 0]
         }
       })),
-      label: { show: true, position: 'right', color: '#64748b', fontSize: 10, fontWeight: 600 },
-      barWidth: 12,
+      label: { show: true, position: 'right', color: subTextColor, fontSize: 11, fontWeight: 600 },
+      barWidth: 14,
       showBackground: true,
-      backgroundStyle: { color: 'rgba(180, 180, 180, 0.1)', borderRadius: [0, 10, 10, 0] }
+      backgroundStyle: { color: 'rgba(0, 0, 0, 0.025)', borderRadius: [0, 8, 8, 0] }
     }],
   }
 })
@@ -214,28 +276,28 @@ const genderOption = computed(() => {
   const items = data.value.genderRatio || []
   return {
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-    legend: { bottom: 0, icon: 'circle' },
+    legend: { bottom: 0, icon: 'circle', textStyle: { color: textColor, fontSize: 12 } },
     series: [{
       type: 'pie',
-      radius: ['45%', '70%'],
+      radius: ['48%', '72%'],
       center: ['50%', '45%'],
       avoidLabelOverlap: false,
-      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
-      label: { show: true, formatter: '{b}\n{c} 人' },
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 3 },
+      label: { show: true, formatter: '{b}\n{c} 人', color: textColor, fontSize: 12 },
+      labelLine: { length: 6, length2: 6 },
       data: items.map((i, idx) => ({ name: i.name, value: i.value, itemStyle: { color: genderColors[idx % genderColors.length] } })),
     }],
   }
 })
 
-// ============ 月度入职趋势：折线 + 柱状图 ============
+// ============ 月度入职趋势：折线图 ============
 const trendOption = computed(() => {
   const items = data.value.monthlyTrend || []
   return {
     tooltip: { trigger: 'axis' },
-    legend: { data: ['入职人数'], top: 0 },
-    grid: { left: 40, right: 20, top: 36, bottom: 22, containLabel: true },
-    xAxis: { type: 'category', data: items.map(i => i.month.substring(5)), axisLine: { lineStyle: { color: '#ddd' } } },
-    yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed' } } },
+    grid: { left: 40, right: 20, top: 24, bottom: 22, containLabel: true },
+    xAxis: { type: 'category', data: items.map(i => i.month.substring(5)), axisLine: { lineStyle: { color: splitLineColor } }, axisLabel: { color: subTextColor } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: splitLineColor } }, axisLabel: { color: subTextColor } },
     series: [
       {
         name: '入职人数',
@@ -243,25 +305,25 @@ const trendOption = computed(() => {
         data: items.map(i => i.onboardCount),
         smooth: true,
         symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: { width: 3, color: '#5B8FF9' },
-        itemStyle: { color: '#5B8FF9' },
+        symbolSize: 7,
+        lineStyle: { width: 3, color: '#6366f1' },
+        itemStyle: { color: '#6366f1', borderColor: '#fff', borderWidth: 2 },
         areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
-          { offset: 0, color: 'rgba(91,143,249,0.4)' },
-          { offset: 1, color: 'rgba(91,143,249,0.02)' },
+          { offset: 0, color: 'rgba(99, 102, 241, 0.35)' },
+          { offset: 1, color: 'rgba(99, 102, 241, 0.02)' },
         ] } },
-        markPoint: { symbol: 'pin', symbolSize: 36, data: [{ type: 'max', name: '最大' }] },
+        markPoint: { symbol: 'pin', symbolSize: 36, data: [{ type: 'max', name: '最大' }], itemStyle: { color: '#6366f1' } },
       },
     ],
   }
 })
 
-// ============ 职级分布：饼图（玫瑰图） ============
+// ============ 职级分布：玫瑰图 ============
 const rankOption = computed(() => {
   const items = data.value.rankDistribution || []
   return {
     tooltip: { trigger: 'item', formatter: '{b}: {c} 人 ({d}%)' },
-    legend: { type: 'scroll', orient: 'horizontal', bottom: 0, icon: 'circle' },
+    legend: { type: 'scroll', orient: 'horizontal', bottom: 0, icon: 'circle', textStyle: { color: textColor, fontSize: 11 } },
     series: [{
       type: 'pie',
       radius: [20, 80],
@@ -272,7 +334,7 @@ const rankOption = computed(() => {
         show: true,
         formatter: '{b}\n{c}人',
         fontSize: 11,
-        color: '#303133',
+        color: textColor,
       },
       labelLine: { show: true, length: 8, length2: 8 },
       labelLayout: { hideOverlap: false },
@@ -282,13 +344,13 @@ const rankOption = computed(() => {
 })
 
 // ============ 年龄分布：柱状图 ============
-const ageOption = computed(() => buildBarOption(data.value.ageDistribution, '#5AD8A6'))
+const ageOption = computed(() => buildBarOption(data.value.ageDistribution, '#10b981'))
 
 // ============ 工龄分布：柱状图 ============
-const tenureOption = computed(() => buildBarOption(data.value.tenureDistribution, '#FFD666'))
+const tenureOption = computed(() => buildBarOption(data.value.tenureDistribution, '#f59e0b'))
 
 // ============ 学历分布：柱状图 ============
-const educationOption = computed(() => buildBarOption(data.value.educationDistribution, '#9270CA'))
+const educationOption = computed(() => buildBarOption(data.value.educationDistribution, '#8b5cf6'))
 
 function buildBarOption(items: NameValue[], color: string) {
   return {
@@ -299,25 +361,25 @@ function buildBarOption(items: NameValue[], color: string) {
       data: items?.map(i => i.name) || [],
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { interval: 0, fontSize: 10, color: '#64748b' }
+      axisLabel: { interval: 0, fontSize: 10, color: subTextColor }
     },
-    yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } }, axisLabel: { color: '#94a3b8' } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: splitLineColor } }, axisLabel: { color: subTextColor } },
     series: [{
       type: 'bar',
       data: items?.map(i => i.value) || [],
-      barWidth: 16,
+      barWidth: 18,
       itemStyle: {
         color: {
           type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
           colorStops: [
             { offset: 0, color: color },
-            { offset: 1, color: color + '44' }
+            { offset: 1, color: color + '33' }
           ]
         },
         borderRadius: [8, 8, 0, 0]
       },
-      label: { show: true, position: 'top', color: '#64748b', fontSize: 10, fontWeight: 600 },
-      emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.1)' } }
+      label: { show: true, position: 'top', color: subTextColor, fontSize: 10, fontWeight: 600 },
+      emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: color + '55' } }
     }],
   }
 }
@@ -331,54 +393,54 @@ const salaryOption = computed(() => {
     xAxis: {
       type: 'category',
       data: items.map(i => i.name),
-      axisLabel: { interval: 0, fontSize: 10, rotate: items.length > 5 ? 20 : 0, color: '#64748b' },
+      axisLabel: { interval: 0, fontSize: 10, rotate: items.length > 5 ? 20 : 0, color: subTextColor },
       axisLine: { show: false },
       axisTick: { show: false }
     },
-    yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } }, axisLabel: { color: '#94a3b8' } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: splitLineColor } }, axisLabel: { color: subTextColor } },
     series: [{
       type: 'bar',
       data: items.map(i => i.value),
-      barWidth: 20,
+      barWidth: 22,
       itemStyle: {
         color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
-          { offset: 0, color: '#F4664A' },
-          { offset: 1, color: '#FFD666' }
+          { offset: 0, color: '#f43f5e' },
+          { offset: 1, color: '#fbbf24' }
         ] },
         borderRadius: [10, 10, 0, 0],
       },
-      label: { show: true, position: 'top', color: '#64748b', fontSize: 10, fontWeight: 600 },
-      emphasis: { itemStyle: { shadowBlur: 15, shadowColor: 'rgba(244, 102, 74, 0.3)' } }
+      label: { show: true, position: 'top', color: subTextColor, fontSize: 10, fontWeight: 600 },
+      emphasis: { itemStyle: { shadowBlur: 15, shadowColor: 'rgba(244, 63, 94, 0.35)' } }
     }],
   }
 })
 
-// ============ 部门薪资统计：双 Y 轴（人头+平均薪资） ============
+// ============ 部门薪资统计：双 Y 轴 ============
 const deptSalaryOption = computed(() => {
   const items = data.value.departmentSalary || []
   return {
     tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
-    legend: { data: ['人数', '平均薪资'], top: 0, itemGap: 20, textStyle: { color: '#64748b', fontSize: 11 } },
-    grid: { left: 10, right: 10, top: 40, bottom: 5, containLabel: true },
+    legend: { data: ['人数', '平均薪资'], top: 0, itemGap: 20, textStyle: { color: subTextColor, fontSize: 11 } },
+    grid: { left: 10, right: 10, top: 36, bottom: 5, containLabel: true },
     xAxis: {
       type: 'category',
       data: items.map(i => i.department),
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { interval: 0, rotate: items.length > 6 ? 25 : 0, color: '#64748b', fontSize: 10 },
+      axisLabel: { interval: 0, rotate: items.length > 6 ? 25 : 0, color: subTextColor, fontSize: 10 },
     },
     yAxis: [
-      { type: 'value', name: '人数', position: 'left', splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } }, axisLabel: { color: '#94a3b8' }, nameTextStyle: { color: '#94a3b8' } },
-      { type: 'value', name: '平均薪资', position: 'right', splitLine: { show: false }, axisLabel: { formatter: (v: number) => '¥' + (v / 1000).toFixed(0) + 'k', color: '#94a3b8' }, nameTextStyle: { color: '#94a3b8' } },
+      { type: 'value', name: '人数', position: 'left', splitLine: { lineStyle: { type: 'dashed', color: splitLineColor } }, axisLabel: { color: subTextColor }, nameTextStyle: { color: subTextColor } },
+      { type: 'value', name: '平均薪资', position: 'right', splitLine: { show: false }, axisLabel: { formatter: (v: number) => '¥' + (v / 1000).toFixed(0) + 'k', color: subTextColor }, nameTextStyle: { color: subTextColor } },
     ],
     series: [
       {
         name: '人数', type: 'bar', data: items.map(i => i.headcount),
-        barWidth: 14,
+        barWidth: 16,
         itemStyle: {
           color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
-            { offset: 0, color: '#5B8FF9' },
-            { offset: 1, color: '#5B8FF944' }
+            { offset: 0, color: '#6366f1' },
+            { offset: 1, color: '#6366f133' }
           ] },
           borderRadius: [6, 6, 0, 0]
         },
@@ -386,8 +448,8 @@ const deptSalaryOption = computed(() => {
       {
         name: '平均薪资', type: 'line', yAxisIndex: 1, data: items.map(i => i.avgSalary),
         smooth: true, symbol: 'circle', symbolSize: 8,
-        lineStyle: { width: 3, color: '#F4664A', shadowBlur: 10, shadowColor: 'rgba(244, 102, 74, 0.3)', shadowOffsetY: 5 },
-        itemStyle: { color: '#F4664A', borderColor: '#fff', borderWidth: 2 },
+        lineStyle: { width: 3, color: '#f43f5e', shadowBlur: 10, shadowColor: 'rgba(244, 63, 94, 0.3)', shadowOffsetY: 5 },
+        itemStyle: { color: '#f43f5e', borderColor: '#fff', borderWidth: 2 },
       },
     ],
   }
@@ -396,76 +458,160 @@ const deptSalaryOption = computed(() => {
 
 <style scoped>
 .dashboard-page {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-  height: calc(100vh - 60px);
+  min-height: calc(100vh - 56px);
   overflow-y: auto;
-  box-sizing: border-box;
-}
-
-html.dark .dashboard-page {
-  background: linear-gradient(135deg, #141414 0%, #1a1a1a 100%);
 }
 
 /* 顶部 KPI */
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 14px;
 }
+
 .kpi-card {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #ebeef5;
-  transition: all 0.2s;
-  position: relative;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s var(--ease-out);
   overflow: hidden;
+  cursor: default;
 }
-.kpi-card::before {
-  content: '';
+
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
+}
+
+.kpi-glow {
   position: absolute;
-  inset: 0 0 0 auto;
-  width: 3px;
-  background: var(--accent);
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.3s;
 }
-.kpi-card.kpi-primary { --accent: #5B8FF9; }
-.kpi-card.kpi-success { --accent: #5AD8A6; }
-.kpi-card.kpi-warning { --accent: #FFD666; }
-.kpi-card.kpi-danger  { --accent: #F4664A; }
-.kpi-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+
+.kpi-card:hover .kpi-glow {
+  opacity: 1;
+}
+
+.kpi-card.kpi-primary { --accent: #6366f1; --accent-soft: rgba(99, 102, 241, 0.1); }
+.kpi-card.kpi-success { --accent: #10b981; --accent-soft: rgba(16, 185, 129, 0.1); }
+.kpi-card.kpi-warning { --accent: #f59e0b; --accent-soft: rgba(245, 158, 11, 0.1); }
+.kpi-card.kpi-danger  { --accent: #f43f5e; --accent-soft: rgba(244, 63, 94, 0.1); }
+
 .kpi-icon {
-  width: 40px;
-  height: 40px;
+  position: relative;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  font-size: 20px;
+  border-radius: 12px;
+  font-size: 21px;
   color: #fff;
   background: var(--accent);
+  box-shadow: 0 6px 14px -4px var(--accent);
+  flex-shrink: 0;
+  transition: transform 0.3s var(--ease-spring);
 }
-.kpi-info { flex: 1; min-width: 0; }
-.kpi-label { font-size: 11px; color: #909399; margin-bottom: 1px; }
-.kpi-value { font-size: 20px; font-weight: 700; color: #303133; line-height: 1.1; }
-.kpi-sub { font-size: 10px; color: #909399; margin-top: 2px; }
+
+.kpi-card:hover .kpi-icon {
+  transform: scale(1.06) rotate(-4deg);
+}
+
+.kpi-info { flex: 1; min-width: 0; position: relative; }
+
+.kpi-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.kpi-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-feature-settings: 'tnum';
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-regular) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.kpi-sub {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.kpi-anim {
+  animation: kpiIn 0.6s var(--ease-out) both;
+}
+
+@keyframes kpiIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* 图表卡片 */
-.chart-row { margin: 0 !important; gap: 0; }
-.chart-card { border-radius: 8px; }
-.chart-card :deep(.el-card__header) { padding: 8px 12px; }
-.chart-card :deep(.el-card__body) { padding: 10px; }
+.chart-row { margin: 0 !important; }
+.chart-card {
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+.chart-card :deep(.el-card__header) { padding: 12px 16px; }
+.chart-card :deep(.el-card__body) { padding: 12px 16px; }
+
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 }
-.chart-title { font-size: 13px; font-weight: 600; color: #303133; }
-.chart-sub { font-size: 10px; color: #909399; }
+
+.chart-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+
+.chart-title-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+}
+.chart-title-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.18;
+  filter: blur(2px);
+  z-index: -1;
+}
+
+.chart-sub {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
 </style>
