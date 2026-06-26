@@ -10,6 +10,7 @@ import com.ems.entity.SalaryStructure;
 import com.ems.entity.SocialSecurityConfig;
 import com.ems.mapper.SalaryRecordMapper;
 import com.ems.service.EmployeeService;
+import com.ems.common.TaxCalculator;
 import com.ems.service.SalaryRecordService;
 import com.ems.service.SalaryStructureService;
 import com.ems.service.SocialSecurityConfigService;
@@ -115,13 +116,8 @@ public class SalaryRecordServiceImpl extends ServiceImpl<SalaryRecordMapper, Sal
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
                 record.setHousingFundPersonal(housingFund);
                 
-                // 计算个税（简化版：应纳税所得额 = 工资 - 社保 - 公积金 - 5000起征点）
-                BigDecimal taxableIncome = grossSalary.subtract(socialSecurity).subtract(housingFund).subtract(new BigDecimal("5000"));
-                BigDecimal tax = BigDecimal.ZERO;
-                if (taxableIncome.compareTo(BigDecimal.ZERO) > 0) {
-                    // 简化税率 3%
-                    tax = taxableIncome.multiply(new BigDecimal("0.03")).setScale(2, RoundingMode.HALF_UP);
-                }
+                // 计算个税（中国七级超额累进税率）
+                BigDecimal tax = TaxCalculator.calculateMonthlyTax(grossSalary, socialSecurity, housingFund);
                 record.setTax(tax);
                 
                 // 实发工资

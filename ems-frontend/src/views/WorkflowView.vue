@@ -1,5 +1,5 @@
 <template>
-  <div class="workflow-page">
+  <div class="workflow-page ems-page">
     <el-card class="main-card" shadow="hover">
       <template #header>
         <div class="card-header">
@@ -79,15 +79,18 @@
       <el-empty v-if="tableData.length === 0 && !loading" description="暂无变更记录" :image-size="120" />
 
       <div class="pagination-wrapper">
+        <div class="pagination-left">
+          <span class="pagination-total">
+            共 <em class="ems-mono">{{ total }}</em> 条记录
+          </span>
+        </div>
         <el-pagination
           v-model:current-page="query.page"
           v-model:page-size="query.size"
           :total="total"
           :page-sizes="[10, 20, 50]"
           background
-          layout="total, sizes, prev, pager, next, jumper"
-          :prev-text="'上一页'"
-          :next-text="'下一页'"
+          layout="sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -170,18 +173,14 @@ onMounted(fetchData)
 
 <style scoped>
 .workflow-page {
-  padding: 16px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-  height: calc(100vh - 60px);
+  height: calc(100vh - 56px);
   overflow-y: auto;
   box-sizing: border-box;
 }
 
 .main-card {
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border-subtle) !important;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -189,9 +188,7 @@ onMounted(fetchData)
 }
 
 .main-card :deep(.el-card__header) {
-  padding: 12px 20px;
-  background: #fff;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 14px 20px;
 }
 
 .main-card :deep(.el-card__body) {
@@ -199,7 +196,7 @@ onMounted(fetchData)
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 14px 20px;
+  padding: 16px 20px;
 }
 
 .card-header {
@@ -214,11 +211,11 @@ onMounted(fetchData)
 }
 
 .search-section {
-  background: #f8fafc;
-  border-radius: 10px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   margin-bottom: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-subtle);
 }
 
 .search-form {
@@ -239,89 +236,94 @@ onMounted(fetchData)
 }
 
 .workflow-table {
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   flex: 1;
   min-height: 0;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--border-subtle);
 }
 
-.workflow-table :deep(.el-table__header-wrapper th.el-table__cell) {
-  background: #f8fafc;
-  color: #64748b;
-  font-weight: 600;
-  font-size: 13px;
-  height: 40px;
-  border-bottom: 1px solid #f1f5f9;
+.workflow-table :deep(.el-table__body-wrapper) {
+  overflow-x: auto;
 }
 
-.workflow-table :deep(.el-table__row) {
-  height: 52px;
+.workflow-table :deep(.el-table__fixed-right) {
+  background: var(--bg-soft);
+  z-index: 10;
+  left: auto;
+  right: 0;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.workflow-table :deep(.el-table__fixed-right-patch) {
+  background: var(--bg-soft);
+}
+
+.workflow-table :deep(.el-table__fixed-right::before) {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-subtle);
+  z-index: 1;
 }
 
 .employee-cell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .emp-name {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   font-size: 13px;
 }
 
 .emp-no {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
-  color: #3b82f6;
-  background: #eff6ff;
-  padding: 0 6px;
+  color: var(--brand-700);
+  background: var(--brand-50);
+  padding: 1px 6px;
   border-radius: 4px;
   width: fit-content;
+  letter-spacing: 0.3px;
 }
 
 .summary-cell {
-  color: #475569;
+  color: var(--text-regular);
   font-size: 13px;
 }
 
 .pagination-wrapper {
-  margin-top: 16px;
+  margin-top: 14px;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-default);
+}
+
+.pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
   flex-shrink: 0;
 }
 
-html.dark .main-card {
-  background: #1e1e20;
-  border-color: #2a2a2c;
-}
-
-html.dark .main-card :deep(.el-card__header) {
-  background: #1e1e20;
-  border-bottom-color: #2a2a2c;
-}
-
-html.dark .search-section {
-  background: #141415;
-  border-color: #2a2a2c;
-}
-
-html.dark .workflow-table {
-  border-color: #2a2a2c;
-}
-
-html.dark .workflow-table :deep(.el-table__header-wrapper th.el-table__cell) {
-  background: #141415;
-  border-bottom-color: #2a2a2c;
-}
-
-html.dark .emp-name {
-  color: #e2e8f0;
-}
-
-html.dark .emp-no {
-  background: rgba(59, 130, 246, 0.1);
+.pagination-left em {
+  font-style: normal;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 14px;
+  margin: 0 2px;
 }
 </style>

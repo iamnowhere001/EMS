@@ -32,32 +32,30 @@ defineProps<Props>()
 .title-icon {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #409eff, #5470d6);
+  border-radius: 11px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 19px;
+  box-shadow: 0 6px 14px -4px rgba(99, 102, 241, 0.5);
+  transition: transform 0.3s var(--ease-spring);
 }
+.title-icon:hover { transform: scale(1.06) rotate(-4deg); }
 
 .title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .subtitle {
   font-size: 12px;
-  color: #909399;
-  margin-top: 2px;
-}
-
-html.dark .title {
-  color: #e0e0e0;
-}
-
-html.dark .subtitle {
-  color: #8d9099;
+  color: var(--text-tertiary);
+  margin-top: 3px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
 }
 </style>

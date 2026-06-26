@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import EmployeeView from '../views/EmployeeView.vue'
 import LoginView from '../views/LoginView.vue'
-import DictionaryView from '../views/DictionaryView.vue'
+import OrganizationView from '../views/OrganizationView.vue'
 import { STORAGE_KEYS } from '@/utils/constants'
 
 const router = createRouter({
@@ -23,9 +23,9 @@ const router = createRouter({
       component: EmployeeView,
     },
     {
-      path: '/dictionary',
-      name: 'dictionary',
-      component: DictionaryView,
+      path: '/organization',
+      name: 'organization',
+      component: OrganizationView,
     },
     {
       path: '/dashboard',
@@ -56,6 +56,11 @@ const router = createRouter({
       path: '/social-security',
       name: 'socialSecurity',
       component: () => import('../views/SocialSecurityView.vue'),
+    },
+    {
+      path: '/dictionary',
+      name: 'dictionary',
+      component: () => import('../views/DictionaryView.vue'),
     },
   ],
 })

@@ -5,8 +5,12 @@
       <div class="shape shape-2"></div>
       <div class="shape shape-3"></div>
       <div class="shape shape-4"></div>
+      <div class="shape shape-5"></div>
     </div>
+    <div class="grid-overlay"></div>
+
     <div class="login-box">
+      <!-- 左侧品牌区 -->
       <div class="login-left">
         <div class="brand">
           <div class="brand-icon-box">
@@ -14,10 +18,13 @@
           </div>
           <span class="brand-name">EMS</span>
         </div>
+
         <div class="slogan">
-          <h1 class="login-title">员工信息管理系统</h1>
-          <p class="login-desc">Spring Boot + Vue3 + Element Plus 全栈后台管理解决方案</p>
+          <div class="slogan-eyebrow">EMPLOYEE MANAGEMENT</div>
+          <h1 class="login-title">员工信息<br />管理系统</h1>
+          <p class="login-desc">面向现代企业的一体化人事管理平台 · 让组织运营更高效</p>
         </div>
+
         <div class="login-features">
           <div class="feature-item" v-for="(item, index) in features" :key="index">
             <div class="feature-check">
@@ -26,12 +33,19 @@
             <span>{{ item }}</span>
           </div>
         </div>
+
+        <div class="left-footer">
+          <span class="dot"></span>
+          <span>v2.0 · Refined Edition</span>
+        </div>
       </div>
+
+      <!-- 右侧登录区 -->
       <div class="login-right">
         <div class="login-card">
           <div class="form-header">
-            <div class="form-title">欢迎登录</div>
-            <div class="form-subtitle">请使用管理员账号登录系统</div>
+            <div class="form-title">欢迎回来 👋</div>
+            <div class="form-subtitle">请使用您的账号登录系统</div>
           </div>
           <el-form :model="form" :rules="rules" ref="formRef" class="login-form">
             <el-form-item prop="username">
@@ -65,16 +79,18 @@
                 @click="handleLogin"
               >
                 立即登录
+                <el-icon class="login-btn-icon" v-if="!loading"><ArrowRight /></el-icon>
               </el-button>
             </el-form-item>
           </el-form>
           <div class="login-tips">
-            默认账号：<span>admin</span> / 密码：<span>123456</span>
+            默认账号：<span>admin</span> · 密码：<span>123456</span>
           </div>
         </div>
       </div>
     </div>
-    <div class="copyright">© 2024 EMS Employee Management System</div>
+
+    <div class="copyright">© 2024 EMS Employee Management System · Crafted with care</div>
   </div>
 </template>
 
@@ -82,7 +98,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Management, User, Lock, Check } from '@element-plus/icons-vue'
+import { Management, User, Lock, Check, ArrowRight } from '@element-plus/icons-vue'
 import { authApi } from '@/api/auth'
 import { STORAGE_KEYS } from '@/utils/constants'
 
@@ -134,12 +150,17 @@ const handleLogin = async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+  background:
+    radial-gradient(at 20% 20%, rgba(99, 102, 241, 0.4) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(139, 92, 246, 0.32) 0px, transparent 50%),
+    linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0c0a1f 100%);
   position: relative;
   overflow: hidden;
   padding: 40px 20px;
+  font-family: var(--font-sans);
 }
 
+/* 装饰光斑 */
 .bg-shapes {
   position: absolute;
   inset: 0;
@@ -150,45 +171,57 @@ const handleLogin = async () => {
 .shape {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.35;
-  animation: float 8s ease-in-out infinite;
+  filter: blur(80px);
+  opacity: 0.5;
+  animation: float 12s ease-in-out infinite;
 }
 
 .shape-1 {
-  width: 400px;
-  height: 400px;
-  background: #00c9ff;
-  top: -100px;
-  left: -100px;
+  width: 480px;
+  height: 480px;
+  background: #6366f1;
+  top: -160px;
+  left: -120px;
   animation-delay: 0s;
 }
 
 .shape-2 {
-  width: 300px;
-  height: 300px;
-  background: #92fe9d;
-  bottom: -80px;
-  right: 10%;
-  animation-delay: 2s;
+  width: 360px;
+  height: 360px;
+  background: #8b5cf6;
+  bottom: -100px;
+  right: 8%;
+  animation-delay: 3s;
 }
 
 .shape-3 {
-  width: 250px;
-  height: 250px;
-  background: #ff7e5f;
-  top: 40%;
-  left: 20%;
-  animation-delay: 4s;
+  width: 300px;
+  height: 300px;
+  background: #06b6d4;
+  top: 35%;
+  left: 18%;
+  animation-delay: 5s;
+  opacity: 0.4;
 }
 
 .shape-4 {
-  width: 180px;
-  height: 180px;
-  background: #feb47b;
-  bottom: 20%;
-  left: 5%;
-  animation-delay: 6s;
+  width: 220px;
+  height: 220px;
+  background: #f472b6;
+  bottom: 22%;
+  left: 6%;
+  animation-delay: 7s;
+  opacity: 0.3;
+}
+
+.shape-5 {
+  width: 280px;
+  height: 280px;
+  background: #34d399;
+  top: 10%;
+  right: 18%;
+  animation-delay: 9s;
+  opacity: 0.3;
 }
 
 @keyframes float {
@@ -196,251 +229,379 @@ const handleLogin = async () => {
     transform: translateY(0) scale(1);
   }
   50% {
-    transform: translateY(-30px) scale(1.05);
+    transform: translateY(-40px) scale(1.08);
   }
 }
 
+/* 网格纹理 */
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+  pointer-events: none;
+}
+
+/* 登录卡片 */
 .login-box {
   display: flex;
-  width: 1000px;
+  width: 1020px;
   min-height: 580px;
   border-radius: 24px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 40px 100px -20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
   z-index: 1;
+  animation: cardIn 0.7s var(--ease-out) both;
 }
 
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 左侧 */
 .login-left {
   flex: 1;
-  padding: 60px 60px 60px 70px;
+  padding: 56px 56px 56px 64px;
   color: #fff;
   display: flex;
   flex-direction: column;
   position: relative;
+  background:
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.3) 0px, transparent 60%);
 }
 
-.login-left::before {
+.login-left::after {
   content: '';
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
   width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.18), transparent);
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-bottom: 80px;
+  margin-bottom: 72px;
+  animation: fadeInLeft 0.6s 0.1s var(--ease-out) both;
 }
 
 .brand-icon-box {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, var(--brand-500), var(--violet-500));
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(10px);
+  box-shadow:
+    0 8px 20px -4px rgba(99, 102, 241, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .brand-icon {
-  font-size: 26px;
+  font-size: 24px;
+  color: #fff;
 }
 
 .brand-name {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 2px;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .slogan {
-  margin-bottom: 50px;
+  margin-bottom: 40px;
+  animation: fadeInLeft 0.6s 0.2s var(--ease-out) both;
+}
+
+.slogan-eyebrow {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: rgba(165, 180, 252, 0.8);
+  font-weight: 700;
+  margin-bottom: 16px;
+  font-family: var(--font-mono);
 }
 
 .login-title {
-  font-size: 38px;
-  font-weight: 700;
-  margin-bottom: 18px;
-  line-height: 1.2;
+  font-size: 42px;
+  font-weight: 800;
+  margin: 0 0 18px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fff 0%, #c7d2fe 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .login-desc {
-  font-size: 15px;
-  opacity: 0.75;
+  font-size: 14.5px;
+  opacity: 0.7;
   line-height: 1.6;
-  max-width: 360px;
+  max-width: 380px;
+  margin: 0;
 }
 
 .login-features {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+  margin-top: auto;
+  animation: fadeInLeft 0.6s 0.3s var(--ease-out) both;
 }
 
 .feature-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 15px;
+  font-size: 14px;
   opacity: 0.95;
+  font-weight: 500;
 }
 
 .feature-check {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(146, 254, 157, 0.2);
+  background: rgba(165, 180, 252, 0.2);
+  border: 1px solid rgba(165, 180, 252, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .feature-check .el-icon {
-  font-size: 14px;
-  color: #92fe9d;
+  font-size: 13px;
+  color: #a5b4fc;
 }
 
+.left-footer {
+  margin-top: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.5px;
+  font-family: var(--font-mono);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* 右侧 */
 .login-right {
-  width: 420px;
-  padding: 50px;
+  width: 440px;
+  padding: 50px 56px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .login-card {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 44px 40px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  animation: fadeInRight 0.6s 0.15s var(--ease-out) both;
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 .form-header {
-  margin-bottom: 36px;
+  margin-bottom: 32px;
 }
 
 .form-title {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #fff;
   margin-bottom: 8px;
+  letter-spacing: -0.01em;
 }
 
 .form-subtitle {
   font-size: 13px;
-  color: #909399;
-}
-
-.input-label {
-  font-size: 13px;
-  color: #606266;
-  margin-bottom: 6px;
+  color: rgba(255, 255, 255, 0.55);
   font-weight: 500;
 }
 
+.input-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
 .login-form .el-form-item {
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .login-form .el-input {
-  --el-input-height: 48px;
+  --el-input-height: 46px;
 }
 
 .login-form :deep(.el-input__wrapper) {
-  border-radius: 10px;
-  box-shadow: 0 0 0 1px #dcdfe6 inset;
-  transition: box-shadow 0.2s;
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+  transition: all 0.25s var(--ease-out);
+}
+
+.login-form :deep(.el-input__wrapper:hover) {
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 0 1px rgba(165, 180, 252, 0.4) inset !important;
 }
 
 .login-form :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px #409eff inset, 0 0 0 4px rgba(64, 158, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 0 0 1px rgba(165, 180, 252, 0.8) inset,
+    0 0 0 4px rgba(99, 102, 241, 0.18) !important;
+}
+
+.login-form :deep(.el-input__inner) {
+  color: #fff;
+  font-weight: 500;
+}
+
+.login-form :deep(.el-input__inner::placeholder) {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.login-form :deep(.el-input__prefix) {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .login-btn {
   width: 100%;
   height: 48px;
-  font-size: 16px;
-  margin-top: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 8px;
   border-radius: 10px;
-  background: linear-gradient(90deg, #409eff 0%, #36cfc9 100%);
+  background: linear-gradient(135deg, var(--brand-500) 0%, var(--violet-500) 100%);
   border: none;
-  transition: transform 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.5px;
+  box-shadow:
+    0 4px 14px -2px rgba(99, 102, 241, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: all 0.25s var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s var(--ease-out);
 }
 
 .login-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(64, 158, 255, 0.35);
+  box-shadow:
+    0 10px 24px -4px rgba(99, 102, 241, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.login-btn:hover::before {
+  transform: translateX(100%);
+}
+
+.login-btn-icon {
+  margin-left: 6px;
+  transition: transform 0.25s var(--ease-out);
+}
+
+.login-btn:hover .login-btn-icon {
+  transform: translateX(3px);
 }
 
 .login-tips {
-  margin-top: 28px;
+  margin-top: 24px;
   text-align: center;
-  font-size: 12px;
-  color: #909399;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .login-tips span {
-  color: #409eff;
-  font-weight: 500;
+  color: #a5b4fc;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  margin: 0 2px;
 }
 
 .copyright {
   position: absolute;
-  bottom: 24px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  bottom: 20px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.35);
   z-index: 1;
+  letter-spacing: 0.5px;
 }
 
-/* 暗黑模式适配 */
-html.dark .login-page {
-  background: linear-gradient(135deg, #070b14 0%, #10141c 50%, #0a0e17 100%);
-}
-
-html.dark .login-box {
-  background: rgba(30, 30, 35, 0.4);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-html.dark .login-card {
-  background: rgba(30, 32, 35, 0.95);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-}
-
-html.dark .form-title {
-  color: #e0e0e0;
-}
-
-html.dark .form-subtitle {
-  color: #8d9099;
-}
-
-html.dark .input-label {
-  color: #b0b3b8;
-}
-
-html.dark .login-form :deep(.el-input__wrapper) {
-  background-color: #1d1e1f;
-  box-shadow: 0 0 0 1px #414243 inset;
-}
-
-html.dark .login-form :deep(.el-input__inner) {
-  color: #e0e0e0;
-}
-
-html.dark .login-form :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px #409eff inset, 0 0 0 4px rgba(64, 158, 255, 0.15);
-}
-
-html.dark .login-tips {
-  color: #8d9099;
+/* 响应式 */
+@media (max-width: 900px) {
+  .login-box {
+    flex-direction: column;
+    width: 100%;
+    max-width: 480px;
+  }
+  .login-left {
+    padding: 40px 32px;
+  }
+  .login-left::after { display: none; }
+  .brand { margin-bottom: 32px; }
+  .slogan { margin-bottom: 24px; }
+  .login-title { font-size: 30px; }
+  .login-features { display: none; }
+  .login-right { width: 100%; padding: 36px 32px; }
 }
 </style>

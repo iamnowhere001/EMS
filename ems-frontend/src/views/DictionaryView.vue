@@ -1,5 +1,5 @@
 <template>
-  <div class="dictionary-page">
+  <div class="dictionary-page ems-page">
     <el-card class="dictionary-card" shadow="hover">
       <template #header>
         <div class="card-header">
@@ -242,9 +242,7 @@ onMounted(() => {
 
 <style scoped>
 .dictionary-page {
-  padding: 16px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-  height: calc(100vh - 60px);
+  height: calc(100vh - 56px);
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -253,6 +251,12 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.dictionary-card :deep(.el-card__header) {
+  padding: 14px 20px;
 }
 
 .dictionary-card :deep(.el-card__body) {
@@ -260,6 +264,7 @@ onMounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  padding: 16px 20px;
 }
 
 .card-header {
@@ -277,25 +282,30 @@ onMounted(() => {
 .title-icon {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #9c64f0 0%, #5b8ff9 100%);
+  border-radius: 11px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 19px;
+  box-shadow: 0 6px 14px -4px rgba(99, 102, 241, 0.5);
+  transition: transform 0.3s var(--ease-spring);
 }
+.title-icon:hover { transform: scale(1.06) rotate(-4deg); }
 
 .title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .subtitle {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-tertiary);
   margin-top: 2px;
+  font-weight: 500;
 }
 
 .search-bar {
@@ -317,17 +327,5 @@ onMounted(() => {
 
 .full-width {
   width: 100%;
-}
-
-html.dark .dictionary-page {
-  background: linear-gradient(135deg, #141414 0%, #1a1a1a 100%);
-}
-
-html.dark .title {
-  color: #e0e0e0;
-}
-
-html.dark .subtitle {
-  color: #8d9099;
 }
 </style>

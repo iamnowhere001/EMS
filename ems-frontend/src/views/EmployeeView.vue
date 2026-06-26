@@ -1,38 +1,42 @@
 <template>
-  <div class="employee-page">
-    <el-row :gutter="16" class="stat-row">
+  <div class="employee-page ems-page">
+    <el-row :gutter="14" class="stat-row">
       <el-col :span="6">
-        <div class="stat-card primary">
+        <div class="stat-card primary stat-anim" style="animation-delay: 0ms">
+          <div class="stat-glow"></div>
           <div class="stat-icon"><el-icon><UserFilled /></el-icon></div>
           <div class="stat-info">
-            <div class="stat-value">{{ Math.round(totalCountDisplay) }}</div>
+            <div class="stat-value ems-mono">{{ Math.round(totalCountDisplay) }}</div>
             <div class="stat-label">员工总数</div>
           </div>
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="stat-card success">
+        <div class="stat-card success stat-anim" style="animation-delay: 80ms">
+          <div class="stat-glow"></div>
           <div class="stat-icon"><el-icon><CircleCheckFilled /></el-icon></div>
           <div class="stat-info">
-            <div class="stat-value">{{ Math.round(activeCountDisplay) }}</div>
+            <div class="stat-value ems-mono">{{ Math.round(activeCountDisplay) }}</div>
             <div class="stat-label">在职员工</div>
           </div>
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="stat-card warning">
+        <div class="stat-card warning stat-anim" style="animation-delay: 160ms">
+          <div class="stat-glow"></div>
           <div class="stat-icon"><el-icon><OfficeBuilding /></el-icon></div>
           <div class="stat-info">
-            <div class="stat-value">{{ Math.round(departmentCountDisplay) }}</div>
+            <div class="stat-value ems-mono">{{ Math.round(departmentCountDisplay) }}</div>
             <div class="stat-label">部门数量</div>
           </div>
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="stat-card danger">
+        <div class="stat-card danger stat-anim" style="animation-delay: 240ms">
+          <div class="stat-glow"></div>
           <div class="stat-icon"><el-icon><Money /></el-icon></div>
           <div class="stat-info">
-            <div class="stat-value">¥ {{ formatSalary(totalSalaryDisplay) }}</div>
+            <div class="stat-value ems-mono">¥ {{ formatSalary(totalSalaryDisplay) }}</div>
             <div class="stat-label">薪资总支出</div>
           </div>
         </div>
@@ -59,78 +63,92 @@
       <div class="search-section">
         <div class="search-header">
           <div class="search-title">
-            <el-icon><Search /></el-icon>
+            <el-icon class="search-title-icon"><Search /></el-icon>
             <span>搜索筛选</span>
-            <span v-if="!searchExpanded" class="search-tags">
-              <el-tag v-if="queryForm.name" size="small" type="info">姓名: {{ queryForm.name }}</el-tag>
-              <el-tag v-if="queryForm.department" size="small" type="info">部门: {{ queryForm.department }}</el-tag>
-              <el-tag v-if="queryForm.status !== undefined" size="small" type="info">状态: {{ queryForm.status === 1 ? '在职' : '离职' }}</el-tag>
+            <span v-if="!searchExpanded && activeFilterCount > 0" class="filter-count-badge">
+              {{ activeFilterCount }}
             </span>
           </div>
-          <el-button link :icon="searchExpanded ? ArrowUp : ArrowDown" @click="searchExpanded = !searchExpanded">
-            {{ searchExpanded ? '收起' : '展开' }}
-          </el-button>
+          <div class="search-header-right">
+            <div v-if="!searchExpanded && activeFilterCount > 0" class="active-filter-tags">
+              <el-tag v-if="queryForm.name" size="small" type="primary" effect="light" closable @close="handleClearFilter('name')">
+                姓名: {{ queryForm.name }}
+              </el-tag>
+              <el-tag v-if="queryForm.department" size="small" type="success" effect="light" closable @close="handleClearFilter('department')">
+                {{ departmentNameMap[queryForm.department] || queryForm.department }}
+              </el-tag>
+              <el-tag v-if="queryForm.status !== undefined" size="small" type="warning" effect="light" closable @close="handleClearFilter('status')">
+                {{ queryForm.status === 1 ? '在职' : '离职' }}
+              </el-tag>
+              <el-button v-if="activeFilterCount > 2" type="primary" link size="small" @click="searchExpanded = true">
+                全部 {{ activeFilterCount }} 个条件
+              </el-button>
+            </div>
+            <el-button link :icon="searchExpanded ? ArrowUp : ArrowDown" @click="searchExpanded = !searchExpanded">
+              {{ searchExpanded ? '收起' : '高级筛选' }}
+            </el-button>
+          </div>
         </div>
         <el-collapse-transition>
           <el-form v-show="searchExpanded" :model="queryForm" class="search-form">
-            <el-form-item label="姓名">
-              <el-input
-                v-model="queryForm.name"
-                placeholder="请输入姓名"
-                clearable
-                :prefix-icon="Search"
-                @keyup.enter="handleSearch"
-              />
-            </el-form-item>
-            <el-form-item label="工号">
-              <el-input
-                v-model="queryForm.employeeNo"
-                placeholder="请输入工号"
-                clearable
-                :prefix-icon="Postcard"
-                @keyup.enter="handleSearch"
-              />
-            </el-form-item>
-            <el-form-item label="部门">
-              <el-select
-                v-model="queryForm.department"
-                placeholder="请选择部门"
-                clearable
-                filterable
-                :prefix-icon="OfficeBuilding"
-                @change="handleDepartmentFilterChange"
-              >
-                <el-option
-                  v-for="dept in departmentOptions"
-                  :key="dept.code"
-                  :label="dept.name"
-                  :value="dept.code"
+            <div class="search-form-grid">
+              <el-form-item label="姓名">
+                <el-input
+                  v-model="queryForm.name"
+                  placeholder="请输入姓名"
+                  clearable
+                  :prefix-icon="Search"
+                  @keyup.enter="handleSearch"
                 />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="岗位">
-              <el-select
-                v-model="queryForm.position"
-                placeholder="请选择岗位"
-                clearable
-                filterable
-                :prefix-icon="User"
-                @change="handleSearch"
-              >
-                <el-option
-                  v-for="pos in filteredPositionOptions"
-                  :key="pos.code"
-                  :label="pos.name"
-                  :value="pos.code"
+              </el-form-item>
+              <el-form-item label="工号">
+                <el-input
+                  v-model="queryForm.employeeNo"
+                  placeholder="请输入工号"
+                  clearable
+                  :prefix-icon="Postcard"
+                  @keyup.enter="handleSearch"
                 />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="状态">
-              <el-select v-model="queryForm.status" placeholder="全部状态" clearable @change="handleSearch">
-                <el-option label="在职" :value="1" />
-                <el-option label="离职" :value="0" />
-              </el-select>
-            </el-form-item>
+              </el-form-item>
+              <el-form-item label="部门">
+                <el-select
+                  v-model="queryForm.department"
+                  placeholder="全部部门"
+                  clearable
+                  filterable
+                  @change="handleDepartmentFilterChange"
+                >
+                  <el-option
+                    v-for="dept in departmentOptions"
+                    :key="dept.code"
+                    :label="dept.name"
+                    :value="dept.code"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="岗位">
+                <el-select
+                  v-model="queryForm.position"
+                  placeholder="全部岗位"
+                  clearable
+                  filterable
+                  @change="handleSearch"
+                >
+                  <el-option
+                    v-for="pos in filteredPositionOptions"
+                    :key="pos.code"
+                    :label="pos.name"
+                    :value="pos.code"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="状态">
+                <el-select v-model="queryForm.status" placeholder="全部状态" clearable @change="handleSearch">
+                  <el-option label="在职" :value="1" />
+                  <el-option label="离职" :value="0" />
+                </el-select>
+              </el-form-item>
+            </div>
             <div class="search-actions">
               <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
               <el-button :icon="RefreshRight" @click="handleReset">重置</el-button>
@@ -204,15 +222,21 @@
       </div>
 
       <div class="pagination-wrapper">
+        <div class="pagination-left">
+          <span class="pagination-total">
+            共 <em class="ems-mono">{{ total }}</em> 条记录
+          </span>
+          <span v-if="selectedIds.length > 0" class="pagination-selected">
+            已选 <em class="ems-mono">{{ selectedIds.length }}</em> 项
+          </span>
+        </div>
         <el-pagination
           v-model:current-page="queryForm.page"
           v-model:page-size="queryForm.size"
           :total="total"
           :page-sizes="[10, 20, 50, 100]"
           background
-          layout="total, sizes, prev, pager, next, jumper"
-          :prev-text="'上一页'"
-          :next-text="'下一页'"
+          layout="sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -331,6 +355,25 @@ const queryForm = reactive({
 })
 
 const searchExpanded = ref(true)
+
+const activeFilterCount = computed(() => {
+  let count = 0
+  if (queryForm.name) count++
+  if (queryForm.employeeNo) count++
+  if (queryForm.department) count++
+  if (queryForm.position) count++
+  if (queryForm.status !== undefined) count++
+  return count
+})
+
+const handleClearFilter = (field: string) => {
+  if (field === 'name') queryForm.name = ''
+  if (field === 'employeeNo') queryForm.employeeNo = ''
+  if (field === 'department') queryForm.department = ''
+  if (field === 'position') queryForm.position = ''
+  if (field === 'status') queryForm.status = undefined
+  handleSearch()
+}
 
 const departmentOptions = ref<Dictionary[]>([])
 const positionOptionsAll = ref<Dictionary[]>([])
@@ -622,10 +665,7 @@ onUnmounted(() => {
 
 <style scoped>
 .employee-page {
-  padding: 12px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-  height: calc(100vh - 60px);
-  min-height: auto;
+  height: calc(100vh - 56px);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -633,70 +673,98 @@ onUnmounted(() => {
 }
 
 .stat-row {
-  margin-bottom: 8px;
+  margin-bottom: 0;
   flex-shrink: 0;
 }
 
 .stat-card {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s var(--ease-out);
+  overflow: hidden;
+  cursor: default;
 }
 
 .stat-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  border-color: var(--accent-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
-.stat-card.primary { --accent-color: #3b82f6; }
-.stat-card.success { --accent-color: #10b981; }
-.stat-card.warning { --accent-color: #f59e0b; }
-.stat-card.danger { --accent-color: #ef4444; }
+.stat-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  transition: opacity 0.3s;
+}
+
+.stat-card:hover .stat-glow { opacity: 1; }
+
+.stat-card.primary { --accent-color: #6366f1; --accent-soft: rgba(99, 102, 241, 0.1); }
+.stat-card.success { --accent-color: #10b981; --accent-soft: rgba(16, 185, 129, 0.1); }
+.stat-card.warning { --accent-color: #f59e0b; --accent-soft: rgba(245, 158, 11, 0.1); }
+.stat-card.danger  { --accent-color: #f43f5e; --accent-soft: rgba(244, 63, 94, 0.1); }
+
+.stat-card.primary .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 60%); }
+.stat-card.success .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 60%); }
+.stat-card.warning .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 60%); }
+.stat-card.danger  .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 60%); }
 
 .stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 18px;
+  font-size: 19px;
   background: var(--accent-color);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 14px -4px var(--accent-color);
+  flex-shrink: 0;
+  transition: transform 0.3s var(--ease-spring);
+  position: relative;
+  z-index: 1;
 }
 
-.stat-info {
-  flex: 1;
-}
+.stat-card:hover .stat-icon { transform: scale(1.06) rotate(-4deg); }
+
+.stat-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
 
 .stat-value {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
   line-height: 1.1;
-  font-family: 'Inter', -apple-system, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
-  margin-top: 2px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.stat-anim {
+  animation: statIn 0.5s var(--ease-out) both;
+}
+
+@keyframes statIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .main-card {
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border-subtle) !important;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -704,9 +772,7 @@ onUnmounted(() => {
 }
 
 .main-card :deep(.el-card__header) {
-  padding: 12px 20px;
-  background: #fff;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 14px 20px;
 }
 
 .main-card :deep(.el-card__body) {
@@ -714,7 +780,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 14px 20px;
+  padding: 16px 20px;
 }
 
 .card-header {
@@ -729,18 +795,19 @@ onUnmounted(() => {
 }
 
 .search-section {
-  background: #f8fafc;
-  border-radius: 10px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   margin-bottom: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-subtle);
+  transition: all var(--dur-base) var(--ease-out);
 }
 
 .search-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 12px;
 }
 
 .search-title {
@@ -749,25 +816,64 @@ onUnmounted(() => {
   gap: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
+  flex-shrink: 0;
 }
 
-.search-title .el-icon {
-  color: #3b82f6;
-  font-size: 14px;
+.search-title-icon {
+  color: var(--brand-500);
+  font-size: 15px;
 }
 
-.search-tags {
+.filter-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--brand-500);
+  color: #fff;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+}
+
+.search-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.active-filter-tags {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-left: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 560px;
+  overflow: hidden;
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px 16px;
+  padding-top: 12px;
+  margin-top: 10px;
+  border-top: 1px dashed var(--border-default);
+}
+
+.search-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px 16px;
+  flex: 1;
+  min-width: 0;
 }
 
 .search-form :deep(.el-form-item) {
@@ -777,6 +883,7 @@ onUnmounted(() => {
   flex-direction: row;
   align-items: center;
   gap: 8px;
+  margin-left: 0;
 }
 
 .search-form :deep(.el-form-item__label) {
@@ -784,12 +891,14 @@ onUnmounted(() => {
   line-height: 32px;
   font-size: 13px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--text-secondary);
   width: auto !important;
+  flex-shrink: 0;
 }
 
 .search-form :deep(.el-form-item__content) {
-  width: 150px;
+  width: 100% !important;
+  min-width: 0;
 }
 
 .search-form .search-actions {
@@ -797,6 +906,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   margin-left: auto;
+  padding-top: 0;
 }
 
 .toolbar {
@@ -814,7 +924,7 @@ onUnmounted(() => {
 .column-setting-dropdown {
   padding: 8px 0;
   min-width: 160px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .column-setting-dropdown :deep(.el-dropdown-menu__item) {
@@ -822,13 +932,13 @@ onUnmounted(() => {
 }
 
 .selected-tip {
-  font-size: 13px;
-  color: #64748b;
-  font-weight: 500;
-  background: #eff6ff;
+  font-size: 12.5px;
+  background: var(--brand-50);
+  color: var(--brand-700);
   padding: 4px 12px;
-  border-radius: 20px;
-  color: #3b82f6;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  border: 1px solid var(--brand-100);
 }
 
 .empty-state {
@@ -836,46 +946,44 @@ onUnmounted(() => {
 }
 
 .pagination-wrapper {
-  margin-top: 20px;
+  margin-top: 14px;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-default);
+}
+
+.pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
   flex-shrink: 0;
 }
 
-html.dark .stat-card {
-  background: #1e1e20;
-  border-color: #2a2a2c;
+.pagination-left em {
+  font-style: normal;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 14px;
+  margin: 0 2px;
 }
 
-html.dark .stat-value {
-  color: #e2e8f0;
+.pagination-selected {
+  background: var(--brand-50);
+  color: var(--brand-700);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  border: 1px solid var(--brand-100);
 }
 
-html.dark .stat-label {
-  color: #94a3b8;
+.pagination-selected em {
+  color: var(--brand-700);
 }
-
-html.dark .main-card {
-  background: #1e1e20;
-  border-color: #2a2a2c;
-}
-
-html.dark .main-card :deep(.el-card__header) {
-  background: #1e1e20;
-  border-bottom-color: #2a2a2c;
-}
-
-html.dark .search-section {
-  background: #141415;
-  border-color: #2a2a2c;
-}
-
-html.dark .search-title {
-  color: #e2e8f0;
-}
-
-html.dark .selected-tip {
-  background: rgba(59, 130, 246, 0.1);
-}
-
 </style>

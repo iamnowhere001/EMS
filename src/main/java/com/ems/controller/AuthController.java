@@ -8,6 +8,7 @@ import com.ems.dto.RefreshTokenDTO;
 import com.ems.entity.User;
 import com.ems.interceptor.LoginInterceptor;
 import com.ems.service.OperationLogService;
+import com.ems.service.TokenBlacklistService;
 import com.ems.service.UserService;
 import com.ems.vo.UserInfoVO;
 import io.jsonwebtoken.Claims;
@@ -24,11 +25,15 @@ public class AuthController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
     private final OperationLogService operationLogService;
 
-    public AuthController(UserService userService, JwtUtil jwtUtil, OperationLogService operationLogService) {
+    public AuthController(UserService userService, JwtUtil jwtUtil,
+                          TokenBlacklistService tokenBlacklistService,
+                          OperationLogService operationLogService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
         this.operationLogService = operationLogService;
     }
 
@@ -36,7 +41,6 @@ public class AuthController {
     public Result<UserInfoVO> login(@RequestBody @Valid LoginDTO loginDTO, HttpServletRequest request) {
         String ip = LoginInterceptor.resolveClientIp(request);
         UserInfoVO userInfo = userService.login(loginDTO.getUsername(), loginDTO.getPassword(), ip);
-        // 登录成功日志（AuthContext 尚未设置，单独写入）
         operationLogService.logWithOperator(
                 userInfo.getUsername(),
                 ip,
@@ -51,12 +55,16 @@ public class AuthController {
     public Result<UserInfoVO> refresh(@RequestBody @Valid RefreshTokenDTO dto) {
         String refreshToken = dto.getRefreshToken();
 
-        if (!jwtUtil.validateToken(refreshToken)) {
+        if (!jwtUtil.validateTokenSignature(refreshToken)) {
             return Result.error(400, "刷新令牌已过期或无效");
         }
 
         if (!jwtUtil.isRefreshToken(refreshToken)) {
             return Result.error(400, "无效的刷新令牌");
+        }
+
+        if (tokenBlacklistService.isRefreshTokenBlacklisted(refreshToken)) {
+            return Result.error(400, "刷新令牌已被吊销");
         }
 
         Claims claims = jwtUtil.parseToken(refreshToken);
@@ -68,9 +76,11 @@ public class AuthController {
             return Result.error(400, "用户不存在或已被禁用");
         }
 
-        jwtUtil.invalidateRefreshToken(refreshToken);
+        Long expirationTime = claims.getExpiration().getTime();
+        tokenBlacklistService.invalidateRefreshToken(refreshToken, expirationTime);
 
-        String newToken = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
+        int version = tokenBlacklistService.getNextUserVersion(userId);
+        String newToken = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole(), version);
         String newRefreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getUsername());
 
         UserInfoVO vo = new UserInfoVO();
@@ -83,10 +93,6 @@ public class AuthController {
         return Result.success(vo);
     }
 
-    /**
-     * 退出登录：使当前 accessToken 立即失效并刷新该用户的 token 版本，
-     * 同时拉黑 refreshToken。该接口需要登录态，因此会经过 LoginInterceptor。
-     */
     @PostMapping("/logout")
     public Result<Map<String, Object>> logout(HttpServletRequest request,
                                               @RequestBody(required = false) Map<String, String> body) {
@@ -96,16 +102,21 @@ public class AuthController {
         String accessToken = extractToken(request);
         String refreshToken = body == null ? null : body.get("refreshToken");
 
-        // 1. 把当前 accessToken 加入黑名单，并把该用户的 token 版本+1
         if (accessToken != null) {
-            jwtUtil.revokeAccessTokenAndUser(accessToken, userId);
-        }
-        // 2. 拉黑 refreshToken
-        if (refreshToken != null && !refreshToken.isEmpty()) {
-            jwtUtil.invalidateRefreshToken(refreshToken);
+            Long accessExpTime = jwtUtil.getExpirationDate(accessToken) != null ? jwtUtil.getExpirationDate(accessToken).getTime() : System.currentTimeMillis() + jwtUtil.getExpiration();
+            tokenBlacklistService.invalidateAccessToken(accessToken, accessExpTime);
+
+            Integer currentVersion = jwtUtil.getTokenVersion(accessToken);
+            if (currentVersion != null) {
+                tokenBlacklistService.invalidateUserTokens(userId, currentVersion);
+            }
         }
 
-        // 3. 写退出日志
+        if (refreshToken != null && !refreshToken.isEmpty()) {
+            Long refreshExpTime = jwtUtil.getExpirationDate(refreshToken) != null ? jwtUtil.getExpirationDate(refreshToken).getTime() : System.currentTimeMillis() + jwtUtil.getRefreshExpiration();
+            tokenBlacklistService.invalidateRefreshToken(refreshToken, refreshExpTime);
+        }
+
         operationLogService.logWithOperator(
                 username,
                 ip,

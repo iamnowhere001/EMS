@@ -1,5 +1,5 @@
 <template>
-  <div class="user-page">
+  <div class="user-page ems-page">
     <el-card class="main-card" shadow="hover">
       <template #header>
         <div class="card-header">
@@ -78,15 +78,18 @@
       </el-table>
 
       <div class="pagination-wrapper">
+        <div class="pagination-left">
+          <span class="pagination-total">
+            共 <em class="ems-mono">{{ total }}</em> 条记录
+          </span>
+        </div>
         <el-pagination
           v-model:current-page="query.page"
           v-model:page-size="query.size"
           :total="total"
           :page-sizes="[10, 20, 50]"
           background
-          layout="total, sizes, prev, pager, next, jumper"
-          :prev-text="'上一页'"
-          :next-text="'下一页'"
+          layout="sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -310,9 +313,7 @@ onMounted(() => {
 
 <style scoped>
 .user-page {
-  padding: 16px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-  height: calc(100vh - 60px);
+  height: calc(100vh - 56px);
   overflow-y: auto;
   box-sizing: border-box;
   display: flex;
@@ -320,10 +321,8 @@ onMounted(() => {
 }
 
 .main-card {
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border-subtle) !important;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -331,9 +330,7 @@ onMounted(() => {
 }
 
 .main-card :deep(.el-card__header) {
-  padding: 12px 20px;
-  background: #fff;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 14px 20px;
 }
 
 .main-card :deep(.el-card__body) {
@@ -341,7 +338,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 14px 20px;
+  padding: 16px 20px;
 }
 
 .card-header {
@@ -351,11 +348,11 @@ onMounted(() => {
 }
 
 .search-section {
-  background: #f8fafc;
-  border-radius: 10px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   margin-bottom: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-subtle);
 }
 
 .search-form {
@@ -376,67 +373,71 @@ onMounted(() => {
 }
 
 .user-table {
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   flex: 1;
   min-height: 0;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--border-subtle);
 }
 
-.user-table :deep(.el-table__header-wrapper th.el-table__cell) {
-  background: #f8fafc;
-  color: #64748b;
-  font-weight: 600;
-  font-size: 13px;
-  height: 40px;
-  border-bottom: 1px solid #f1f5f9;
+.user-table :deep(.el-table__body-wrapper) {
+  overflow-x: auto;
 }
 
-.user-table :deep(.el-table__row) {
-  height: 52px;
+.user-table :deep(.el-table__fixed-right) {
+  background: var(--bg-soft);
+  z-index: 10;
+  left: auto;
+  right: 0;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.user-table :deep(.el-table__fixed-right-patch) {
+  background: var(--bg-soft);
+}
+
+.user-table :deep(.el-table__fixed-right::before) {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-subtle);
+  z-index: 1;
 }
 
 .username-text {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .pagination-wrapper {
-  margin-top: 16px;
+  margin-top: 14px;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-default);
+}
+
+.pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
   flex-shrink: 0;
 }
 
-html.dark .user-page {
-  background: linear-gradient(135deg, #141414 0%, #1a1a1a 100%);
-}
-
-html.dark .main-card {
-  background: #1e1e20;
-  border-color: #2a2a2c;
-}
-
-html.dark .main-card :deep(.el-card__header) {
-  background: #1e1e20;
-  border-bottom-color: #2a2a2c;
-}
-
-html.dark .search-section {
-  background: #141415;
-  border-color: #2a2a2c;
-}
-
-html.dark .user-table {
-  border-color: #2a2a2c;
-}
-
-html.dark .user-table :deep(.el-table__header-wrapper th.el-table__cell) {
-  background: #141415;
-  border-bottom-color: #2a2a2c;
-}
-
-html.dark .username-text {
-  color: #e2e8f0;
+.pagination-left em {
+  font-style: normal;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 14px;
+  margin: 0 2px;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="social-security-page">
+  <div class="social-security-page ems-page">
     <div class="page-header">
       <h2>社保公积金配置</h2>
     </div>
@@ -186,22 +186,26 @@ onMounted(() => {
 
 <style scoped>
 .social-security-page {
-  padding: 20px;
+  min-height: calc(100vh - 56px);
 }
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 6px;
 }
 .page-header h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 .search-area {
-  margin-bottom: 20px;
-  padding: 20px;
-  background: #fff;
-  border-radius: 4px;
+  margin-bottom: 12px;
+  padding: 14px 18px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
 }
 </style>

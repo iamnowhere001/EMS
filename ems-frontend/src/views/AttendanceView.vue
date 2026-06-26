@@ -1,5 +1,5 @@
 <template>
-  <div class="attendance-page">
+  <div class="attendance-page ems-page">
     <div class="page-header">
       <h2>考勤管理</h2>
       <div class="header-actions">
@@ -45,16 +45,23 @@
       </el-table-column>
     </el-table>
 
-    <el-pagination
-      v-model:current-page="pagination.page"
-      v-model:page-size="pagination.size"
-      :total="pagination.total"
-      :page-sizes="[10, 20, 50, 100]"
-      layout="total, sizes, prev, pager, next, jumper"
-      @size-change="loadData"
-      @current-change="loadData"
-      style="margin-top: 20px; justify-content: flex-end"
-    />
+    <div class="pagination-wrapper">
+      <div class="pagination-left">
+        <span class="pagination-total">
+          共 <em class="ems-mono">{{ pagination.total }}</em> 条记录
+        </span>
+      </div>
+      <el-pagination
+        v-model:current-page="pagination.page"
+        v-model:page-size="pagination.size"
+        :total="pagination.total"
+        :page-sizes="[10, 20, 50, 100]"
+        background
+        layout="sizes, prev, pager, next, jumper"
+        @size-change="loadData"
+        @current-change="loadData"
+      />
+    </div>
 
     <el-dialog v-model="dialogVisible" title="编辑考勤" width="500px">
       <el-form :model="form" label-width="100px">
@@ -206,22 +213,55 @@ onMounted(() => {
 
 <style scoped>
 .attendance-page {
-  padding: 20px;
+  min-height: calc(100vh - 56px);
 }
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 6px;
 }
 .page-header h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 .search-area {
-  margin-bottom: 20px;
-  padding: 20px;
-  background: #fff;
-  border-radius: 4px;
+  margin-bottom: 12px;
+  padding: 14px 18px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.pagination-wrapper {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-default);
+}
+
+.pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.pagination-left em {
+  font-style: normal;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 14px;
+  margin: 0 2px;
 }
 </style>

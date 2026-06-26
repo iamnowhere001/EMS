@@ -40,8 +40,12 @@ public class Employee {
     @TableField(typeHandler = EncryptionTypeHandler.class)
     private String idCard;
 
+    private String idCardHash;
+
     @TableField(typeHandler = EncryptionTypeHandler.class)
     private String bankCard;
+
+    private String bankCardHash;
 
     private String department;
 
@@ -150,12 +154,28 @@ public class Employee {
         this.idCard = idCard;
     }
 
+    public String getIdCardHash() {
+        return idCardHash;
+    }
+
+    public void setIdCardHash(String idCardHash) {
+        this.idCardHash = idCardHash;
+    }
+
     public String getBankCard() {
         return bankCard;
     }
 
     public void setBankCard(String bankCard) {
         this.bankCard = bankCard;
+    }
+
+    public String getBankCardHash() {
+        return bankCardHash;
+    }
+
+    public void setBankCardHash(String bankCardHash) {
+        this.bankCardHash = bankCardHash;
     }
 
     public String getDepartment() {

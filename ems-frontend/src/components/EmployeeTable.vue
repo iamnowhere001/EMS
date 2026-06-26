@@ -123,29 +123,37 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column v-if="columnVisible.operation" column-key="operation" label="操作" :width="columnWidth.operation || 160" fixed="right" align="center">
+      <el-table-column v-if="columnVisible.operation" column-key="operation" label="操作" :width="columnWidth.operation || 180" fixed="right" align="center">
         <template #default="{ row }">
           <div class="operation-buttons">
-            <el-tooltip content="查看" placement="top">
-              <el-button link type="primary" :icon="View" @click="$emit('view', row)" />
+            <el-tooltip content="查看详情" placement="top">
+              <el-button link type="primary" :icon="View" @click="$emit('view', row)">查看</el-button>
             </el-tooltip>
             <el-tooltip content="编辑" placement="top">
-              <el-button link type="primary" :icon="Edit" @click="$emit('edit', row)" />
-            </el-tooltip>
-            <el-tooltip content="删除" placement="top" v-if="isAdmin()">
-              <el-button link type="danger" :icon="Delete" @click="$emit('delete', row)" />
+              <el-button link type="primary" :icon="Edit" @click="$emit('edit', row)">编辑</el-button>
             </el-tooltip>
             <el-dropdown v-if="isAdmin() && row.status === 1" trigger="click" size="small" @command="(c: string) => $emit('workflow', { type: c, employee: row })">
-              <el-button link type="warning" :icon="More" />
+              <el-button link type="warning" :icon="More">更多</el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="TRANSFER">调岗</el-dropdown-item>
-                  <el-dropdown-item command="ADJUST_SALARY">调薪</el-dropdown-item>
-                  <el-dropdown-item command="CONFIRM">转正</el-dropdown-item>
-                  <el-dropdown-item command="LEAVE" divided>离职</el-dropdown-item>
+                  <el-dropdown-item command="TRANSFER">
+                    <el-icon><Refresh /></el-icon> 调岗
+                  </el-dropdown-item>
+                  <el-dropdown-item command="ADJUST_SALARY">
+                    <el-icon><Money /></el-icon> 调薪
+                  </el-dropdown-item>
+                  <el-dropdown-item command="CONFIRM">
+                    <el-icon><CircleCheckFilled /></el-icon> 转正
+                  </el-dropdown-item>
+                  <el-dropdown-item command="LEAVE" divided>
+                    <el-icon><SwitchButton /></el-icon> 离职
+                  </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
+            <el-tooltip v-else-if="isAdmin()" content="删除" placement="top">
+              <el-button link type="danger" :icon="Delete" @click="$emit('delete', row)" />
+            </el-tooltip>
           </div>
         </template>
       </el-table-column>
@@ -166,6 +174,10 @@ import {
   Female,
   Rank,
   More,
+  Refresh,
+  Money,
+  CircleCheckFilled,
+  SwitchButton,
 } from '@element-plus/icons-vue'
 import { type Employee } from '@/api/employee'
 import { type Dictionary } from '@/api/dictionary'
@@ -293,28 +305,79 @@ onUnmounted(() => {
 }
 
 .employee-table {
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   flex: 1;
   min-height: 0;
-  border: 1px solid #f1f5f9;
-}
-
-.employee-table :deep(.el-table__header-wrapper th.el-table__cell) {
-  background: #f8fafc;
-  color: #64748b;
-  font-weight: 600;
-  font-size: 13px;
-  height: 40px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.employee-table :deep(.el-table__row) {
-  height: 52px;
+  border: 1px solid var(--border-subtle);
 }
 
 .employee-table :deep(.el-table__cell) {
-  padding: 4px 0 !important;
+  padding: 5px 0 !important;
+}
+
+.employee-table :deep(.el-table__body-wrapper) {
+  overflow-x: auto;
+}
+
+.employee-table :deep(.el-table__fixed-right) {
+  background: var(--bg-soft);
+  z-index: 10;
+  left: auto;
+  right: 0;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.employee-table :deep(.el-table__fixed-right-patch) {
+  background: var(--bg-soft);
+}
+
+.employee-table :deep(.el-table__fixed-right::before) {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-subtle);
+  z-index: 1;
+}
+
+.employee-table :deep(.el-table__fixed::before) {
+  background: var(--border-subtle);
+  width: 1px;
+  bottom: 0;
+  height: 100%;
+}
+
+.employee-table :deep(.el-table--border::after),
+.employee-table :deep(.el-table--group::after),
+.employee-table :deep(.el-table::before) {
+  background: var(--border-subtle);
+  height: 1px;
+}
+
+.drag-handle {
+  cursor: grab;
+}
+.drag-handle :deep(.drag-icon) {
+  color: var(--text-tertiary);
+  font-size: 14px;
+  transition: color var(--dur-fast);
+}
+.drag-handle:hover :deep(.drag-icon) {
+  color: var(--brand-500);
+}
+
+.position-cell {
+  color: var(--text-regular);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.gender-icon {
+  margin-right: 2px;
+  font-size: 12px;
 }
 
 .employee-info-cell {
@@ -325,42 +388,52 @@ onUnmounted(() => {
 
 .employee-avatar {
   font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  border: 1px solid #fff;
+  box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.08);
+  border: 2px solid var(--bg-elevated);
+  flex-shrink: 0;
+  transition: transform 0.25s var(--ease-spring);
+}
+.employee-info-cell:hover .employee-avatar {
+  transform: scale(1.08);
 }
 
 .employee-details {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 2px;
+  min-width: 0;
 }
 
 .employee-name {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   font-size: 13px;
   line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 .employee-dept-pos {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-tertiary);
+  font-weight: 500;
 }
 
 .employee-no {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
-  color: #3b82f6;
-  background: #eff6ff;
+  color: var(--brand-700);
+  background: var(--brand-50);
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   font-weight: 500;
+  letter-spacing: 0.3px;
+  border: 1px solid var(--brand-100);
 }
 
 .contact-cell {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .contact-item {
@@ -368,45 +441,38 @@ onUnmounted(() => {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .contact-item .el-icon {
-  color: #94a3b8;
+  color: var(--text-tertiary);
   font-size: 12px;
 }
 
 .salary {
-  color: #ef4444;
+  color: var(--rose-600);
   font-weight: 700;
   font-size: 13px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
 }
 
 .operation-buttons {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  align-items: center;
+  gap: 2px;
 }
 
-html.dark .employee-table {
-  border-color: #2a2a2c;
+.operation-buttons :deep(.el-button) {
+  padding: 4px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-xs);
+  transition: all var(--dur-fast);
 }
 
-html.dark .employee-table :deep(.el-table__header-wrapper th.el-table__cell) {
-  background: #141415;
-  border-bottom-color: #2a2a2c;
-}
-
-html.dark .employee-name {
-  color: #e2e8f0;
-}
-
-html.dark .employee-no {
-  background: rgba(59, 130, 246, 0.1);
-}
-
-html.dark .employee-avatar {
-  border-color: #2a2a2c;
+.operation-buttons :deep(.el-button:hover) {
+  transform: translateY(-1px);
 }
 </style>

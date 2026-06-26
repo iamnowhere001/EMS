@@ -2,6 +2,7 @@ package com.ems.interceptor;
 
 import com.ems.common.AuthContext;
 import com.ems.common.JwtUtil;
+import com.ems.service.TokenBlacklistService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,9 +13,11 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class LoginInterceptor implements HandlerInterceptor {
 
     private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public LoginInterceptor(JwtUtil jwtUtil) {
+    public LoginInterceptor(JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
         this.jwtUtil = jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -28,10 +31,17 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
 
         token = token.substring(7);
-        if (!jwtUtil.validateToken(token)) {
+        if (!jwtUtil.validateTokenSignature(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"code\":401,\"message\":\"Token已过期\",\"data\":null}");
+            response.getWriter().write("{\"code\":401,\"message\":\"Token已过期或无效\",\"data\":null}");
+            return false;
+        }
+
+        if (tokenBlacklistService.isAccessTokenBlacklisted(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":401,\"message\":\"Token已被吊销\",\"data\":null}");
             return false;
         }
 
@@ -39,10 +49,21 @@ public class LoginInterceptor implements HandlerInterceptor {
         Long userId = Long.valueOf(claims.getSubject());
         String username = claims.get("username", String.class);
         String role = claims.get("role", String.class);
+
+        Integer revokedVersion = tokenBlacklistService.getRevokedUserVersion(userId);
+        if (revokedVersion != null) {
+            Integer tokenVersion = claims.get("ver", Integer.class);
+            if (tokenVersion == null || tokenVersion <= revokedVersion) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":401,\"message\":\"账号已登出，请重新登录\",\"data\":null}");
+                return false;
+            }
+        }
+
         AuthContext.set(userId, username, role);
         request.setAttribute("role", role);
 
-        // 捕获客户端 IP 与 User-Agent，供日志使用
         String clientIp = resolveClientIp(request);
         AuthContext.setIp(clientIp);
         AuthContext.setUserAgent(request.getHeader("User-Agent"));
@@ -51,13 +72,9 @@ public class LoginInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    /**
-     * 反向代理场景下，从 X-Forwarded-For / X-Real-IP 中提取真实客户端 IP。
-     */
     public static String resolveClientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (isValidIp(ip)) {
-            // X-Forwarded-For 形如 "client, proxy1, proxy2"，取第一个
             int comma = ip.indexOf(',');
             return comma > 0 ? ip.substring(0, comma).trim() : ip.trim();
         }

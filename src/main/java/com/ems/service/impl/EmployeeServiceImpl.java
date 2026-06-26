@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ems.common.EncryptionUtil;
+import com.ems.common.HashUtil;
 import com.ems.config.CacheConfig;
 import com.ems.dto.EmployeeExcelDTO;
 import com.ems.dto.EmployeeFormDTO;
@@ -86,8 +87,9 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         if (employee.getSortOrder() == null || employee.getSortOrder() == 0) {
             employee.setSortOrder(generateSortOrder());
         }
-        // 校验手机号唯一性（仅校验未删除记录）
         validatePhoneUnique(employee.getPhone(), null);
+        validateIdCardUnique(employee.getIdCard(), null);
+        validateBankCardUnique(employee.getBankCard(), null);
         encryptSensitiveData(employee);
         return super.save(employee);
     }
@@ -299,8 +301,9 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         if (form == null || form.getEmployee() == null) return false;
         Employee employee = form.getEmployee();
         if (employee.getId() == null) return false;
-        // 校验手机号唯一性（排除自身）
         validatePhoneUnique(employee.getPhone(), employee.getId());
+        validateIdCardUnique(employee.getIdCard(), employee.getId());
+        validateBankCardUnique(employee.getBankCard(), employee.getId());
         encryptSensitiveData(employee);
         boolean ok = this.updateById(employee);
         if (ok) {
@@ -322,7 +325,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
      */
     private void validatePhoneUnique(String phone, Long excludeId) {
         if (!StringUtils.hasText(phone)) {
-            return; // 手机号为空时不校验
+            return;
         }
         LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Employee::getPhone, phone)
@@ -333,6 +336,40 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         long count = this.count(wrapper);
         if (count > 0) {
             throw new com.ems.common.BusinessException(400, "手机号已被其他员工使用");
+        }
+    }
+
+    private void validateIdCardUnique(String idCard, Long excludeId) {
+        if (!StringUtils.hasText(idCard)) {
+            return;
+        }
+        String idCardHash = HashUtil.sha256(idCard);
+        LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Employee::getIdCardHash, idCardHash)
+               .eq(Employee::getDeleted, 0);
+        if (excludeId != null) {
+            wrapper.ne(Employee::getId, excludeId);
+        }
+        long count = this.count(wrapper);
+        if (count > 0) {
+            throw new com.ems.common.BusinessException(400, "身份证号已被其他员工使用");
+        }
+    }
+
+    private void validateBankCardUnique(String bankCard, Long excludeId) {
+        if (!StringUtils.hasText(bankCard)) {
+            return;
+        }
+        String bankCardHash = HashUtil.sha256(bankCard);
+        LambdaQueryWrapper<Employee> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Employee::getBankCardHash, bankCardHash)
+               .eq(Employee::getDeleted, 0);
+        if (excludeId != null) {
+            wrapper.ne(Employee::getId, excludeId);
+        }
+        long count = this.count(wrapper);
+        if (count > 0) {
+            throw new com.ems.common.BusinessException(400, "银行卡号已被其他员工使用");
         }
     }
 
@@ -501,10 +538,16 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
     public void encryptSensitiveData(Employee employee) {
         if (employee == null) return;
         if (employee.getIdCard() != null && !employee.getIdCard().isEmpty()) {
+            employee.setIdCardHash(HashUtil.sha256(employee.getIdCard()));
             employee.setIdCard(EncryptionUtil.encrypt(employee.getIdCard()));
+        } else {
+            employee.setIdCardHash(null);
         }
         if (employee.getBankCard() != null && !employee.getBankCard().isEmpty()) {
+            employee.setBankCardHash(HashUtil.sha256(employee.getBankCard()));
             employee.setBankCard(EncryptionUtil.encrypt(employee.getBankCard()));
+        } else {
+            employee.setBankCardHash(null);
         }
     }
 
