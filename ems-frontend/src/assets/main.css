@@ -100,6 +100,23 @@
   --dur-fast: 0.15s;
   --dur-base: 0.25s;
   --dur-slow: 0.4s;
+
+  /* —— 侧边栏(浅色)—— */
+  --sidebar-bg: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  --sidebar-border: #e2e8f0;
+  --sidebar-shadow: 2px 0 12px -4px rgba(15, 23, 42, 0.06);
+  --sidebar-text-primary: #0f172a;
+  --sidebar-text-secondary: #64748b;
+  --sidebar-text-tertiary: #94a3b8;
+  --sidebar-hover-bg: #f1f5f9;
+  --sidebar-active-bg: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --sidebar-active-text: #ffffff;
+  --sidebar-active-icon: #ffffff;
+  --sidebar-icon-color: #64748b;
+  --sidebar-icon-glow: none;
+  --sidebar-active-shadow: 0 4px 14px -4px rgba(99, 102, 241, 0.45);
+  --sidebar-scrollbar: rgba(100, 116, 139, 0.2);
+  --sidebar-scrollbar-hover: rgba(100, 116, 139, 0.35);
 }
 
 html.dark {
@@ -124,6 +141,23 @@ html.dark {
   --shadow-lg: 0 12px 28px -8px rgba(0, 0, 0, 0.6);
   --shadow-xl: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
   --shadow-brand: 0 8px 24px -6px rgba(99, 102, 241, 0.5);
+
+  /* —— 侧边栏(暗色)—— */
+  --sidebar-bg: linear-gradient(180deg, #0f172a 0%, #0b1120 100%);
+  --sidebar-border: rgba(255,255,255,0.06);
+  --sidebar-shadow: 4px 0 24px -4px rgba(0, 0, 0, 0.4);
+  --sidebar-text-primary: #f1f5f9;
+  --sidebar-text-secondary: #94a3b8;
+  --sidebar-text-tertiary: #64748b;
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+  --sidebar-active-bg: linear-gradient(90deg, rgba(99, 102, 241, 0.22) 0%, rgba(139, 92, 246, 0.12) 100%);
+  --sidebar-active-text: #ffffff;
+  --sidebar-active-icon: #a5b4fc;
+  --sidebar-icon-color: #64748b;
+  --sidebar-icon-glow: drop-shadow(0 0 6px rgba(99, 102, 241, 0.5));
+  --sidebar-active-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --sidebar-scrollbar: rgba(255, 255, 255, 0.1);
+  --sidebar-scrollbar-hover: rgba(255, 255, 255, 0.18);
 }
 
 /* ============================ 重置 ============================ */
@@ -294,6 +328,8 @@ html.dark .el-card__header {
 
 /* Table */
 .el-table {
+  --ems-table-row-bg-solid: var(--bg-elevated);
+  --ems-table-row-hover-bg-solid: #f7f7ff;
   --el-table-border-color: var(--border-subtle);
   --el-table-header-bg-color: var(--bg-soft);
   --el-table-row-hover-bg-color: rgba(99, 102, 241, 0.04);
@@ -304,6 +340,9 @@ html.dark .el-card__header {
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: 13.5px;
+}
+html.dark .el-table {
+  --ems-table-row-hover-bg-solid: #202033;
 }
 .el-table th.el-table__cell {
   background: linear-gradient(180deg, var(--bg-soft) 0%, var(--bg-soft) 100%);
@@ -325,11 +364,28 @@ html.dark .el-table th.el-table__cell {
   border-bottom: 1px solid var(--border-subtle);
   transition: background var(--dur-fast);
 }
+.el-table th.el-table-fixed-column--left,
+.el-table th.el-table-fixed-column--right {
+  background: var(--bg-soft) !important;
+  z-index: 4;
+}
+.el-table td.el-table-fixed-column--left,
+.el-table td.el-table-fixed-column--right {
+  background: var(--ems-table-row-bg-solid) !important;
+  z-index: 3;
+}
 .el-table__row {
   transition: background var(--dur-fast), transform var(--dur-fast);
 }
 .el-table__row:hover > td.el-table__cell {
   background: rgba(99, 102, 241, 0.04) !important;
+}
+.el-table__row:hover > td.el-table-fixed-column--left,
+.el-table__row:hover > td.el-table-fixed-column--right,
+.el-table__body tr.hover-row > td.el-table-fixed-column--left,
+.el-table__body tr.hover-row > td.el-table-fixed-column--right {
+  background: var(--ems-table-row-hover-bg-solid) !important;
+  z-index: 5;
 }
 html.dark .el-table__row:hover > td.el-table__cell {
   background: rgba(99, 102, 241, 0.08) !important;

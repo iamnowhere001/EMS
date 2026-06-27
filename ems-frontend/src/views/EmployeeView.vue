@@ -670,10 +670,11 @@ onUnmounted(() => {
   flex-direction: column;
   overflow-y: auto;
   box-sizing: border-box;
+  padding-bottom: 14px;
 }
 
 .stat-row {
-  margin-bottom: 0;
+  margin-bottom: 14px;
   flex-shrink: 0;
 }
 
@@ -682,7 +683,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 18px;
+  padding: 16px 20px;
   border-radius: var(--radius-lg);
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
@@ -695,51 +696,52 @@ onUnmounted(() => {
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--border-default);
 }
 
 .stat-glow {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 0.6;
   transition: opacity 0.3s;
 }
 
 .stat-card:hover .stat-glow { opacity: 1; }
 
-.stat-card.primary { --accent-color: #6366f1; --accent-soft: rgba(99, 102, 241, 0.1); }
-.stat-card.success { --accent-color: #10b981; --accent-soft: rgba(16, 185, 129, 0.1); }
-.stat-card.warning { --accent-color: #f59e0b; --accent-soft: rgba(245, 158, 11, 0.1); }
-.stat-card.danger  { --accent-color: #f43f5e; --accent-soft: rgba(244, 63, 94, 0.1); }
+.stat-card.primary { --accent-color: #6366f1; --accent-soft: rgba(99, 102, 241, 0.12); }
+.stat-card.success { --accent-color: #10b981; --accent-soft: rgba(16, 185, 129, 0.12); }
+.stat-card.warning { --accent-color: #f59e0b; --accent-soft: rgba(245, 158, 11, 0.12); }
+.stat-card.danger  { --accent-color: #f43f5e; --accent-soft: rgba(244, 63, 94, 0.12); }
 
-.stat-card.primary .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 60%); }
-.stat-card.success .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 60%); }
-.stat-card.warning .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 60%); }
-.stat-card.danger  .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 60%); }
+.stat-card.primary .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 65%); }
+.stat-card.success .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 65%); }
+.stat-card.warning .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 65%); }
+.stat-card.danger  .stat-glow { background: radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 65%); }
 
 .stat-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 19px;
-  background: var(--accent-color);
-  box-shadow: 0 6px 14px -4px var(--accent-color);
+  font-size: 20px;
+  background: linear-gradient(135deg, var(--accent-color), color-mix(in srgb, var(--accent-color) 70%, #000));
+  box-shadow: 0 8px 16px -6px var(--accent-color);
   flex-shrink: 0;
   transition: transform 0.3s var(--ease-spring);
   position: relative;
   z-index: 1;
 }
 
-.stat-card:hover .stat-icon { transform: scale(1.06) rotate(-4deg); }
+.stat-card:hover .stat-icon { transform: scale(1.08) rotate(-4deg); }
 
 .stat-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
 
 .stat-value {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.1;
@@ -747,9 +749,9 @@ onUnmounted(() => {
 }
 
 .stat-label {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin-top: 5px;
   font-weight: 500;
 }
 

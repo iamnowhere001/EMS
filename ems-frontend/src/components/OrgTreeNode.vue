@@ -13,7 +13,7 @@
           @click.stop="isExpanded = !isExpanded"
         >
           <el-icon :class="{ rotated: isExpanded }">
-            <ChevronRight />
+            <ArrowRight />
           </el-icon>
         </div>
         <div class="expand-placeholder" v-else></div>
@@ -34,12 +34,12 @@
             {{ node.leaderName }}
           </span>
           <span class="meta-item">
-            <el-icon :size="12"><Users /></el-icon>
+            <el-icon :size="12"><User /></el-icon>
             {{ node.employeeCount || 0 }} 人
           </span>
           <span v-if="hasChildren" class="meta-item">
             <el-icon :size="12"><Folder /></el-icon>
-            {{ node.children.length }} 子部门
+            {{ node.children?.length }} 子部门
           </span>
         </div>
       </div>
@@ -59,12 +59,12 @@
     
     <div class="node-children" v-show="hasChildren && isExpanded">
       <OrgTreeNode
-        v-for="(child, idx) in node.children"
+        v-for="(child, idx) in node.children || []"
         :key="child.id"
         :node="child"
         :level="level + 1"
         :index="idx"
-        :total="node.children.length"
+        :total="(node.children || []).length"
         :default-expanded="false"
         @select="$emit('select', $event)"
         @add="$emit('add', $event)"
@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { ChevronRight, FolderOpened, Folder, UserFilled, User, Users, Plus, Edit, Delete } from '@element-plus/icons-vue'
+import { ArrowRight, FolderOpened, Folder, UserFilled, User, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { isAdmin } from '@/utils/auth'
 import type { Department } from '@/api/department'
 
@@ -93,7 +93,7 @@ defineEmits(['select', 'add', 'edit', 'delete'])
 
 const isExpanded = ref(props.defaultExpanded ?? false)
 
-const hasChildren = computed(() => props.node.children?.length > 0)
+const hasChildren = computed(() => (props.node.children?.length || 0) > 0)
 const isLast = computed(() => props.index === props.total - 1)
 
 const iconColors = [

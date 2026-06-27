@@ -15,7 +15,7 @@ export interface Attendance {
 }
 
 export const attendanceApi = {
-  page(params: { employeeId?: number; yearMonth?: string; page: number; size: number }) {
+  page(params: { employeeId?: number; yearMonth?: string; status?: number; page: number; size: number }) {
     return request.get<any, PageResult<Attendance>>('/attendance/page', { params })
   },
   list(params: { employeeId: number; yearMonth?: string }) {

@@ -458,8 +458,13 @@ const deptSalaryOption = computed(() => {
 
 <style scoped>
 .dashboard-page {
-  min-height: calc(100vh - 56px);
+  height: calc(100vh - 56px);
   overflow-y: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 14px;
 }
 
 /* 顶部 KPI */
@@ -467,6 +472,7 @@ const deptSalaryOption = computed(() => {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
+  flex-shrink: 0;
 }
 
 .kpi-card {
@@ -474,7 +480,7 @@ const deptSalaryOption = computed(() => {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 16px 18px;
+  padding: 16px 20px;
   background: var(--bg-elevated);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-subtle);
@@ -485,9 +491,9 @@ const deptSalaryOption = computed(() => {
 }
 
 .kpi-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
-  border-color: transparent;
+  border-color: var(--border-default);
 }
 
 .kpi-glow {
@@ -502,39 +508,39 @@ const deptSalaryOption = computed(() => {
   opacity: 1;
 }
 
-.kpi-card.kpi-primary { --accent: #6366f1; --accent-soft: rgba(99, 102, 241, 0.1); }
-.kpi-card.kpi-success { --accent: #10b981; --accent-soft: rgba(16, 185, 129, 0.1); }
-.kpi-card.kpi-warning { --accent: #f59e0b; --accent-soft: rgba(245, 158, 11, 0.1); }
-.kpi-card.kpi-danger  { --accent: #f43f5e; --accent-soft: rgba(244, 63, 94, 0.1); }
+.kpi-card.kpi-primary { --accent: #6366f1; --accent-soft: rgba(99, 102, 241, 0.12); }
+.kpi-card.kpi-success { --accent: #10b981; --accent-soft: rgba(16, 185, 129, 0.12); }
+.kpi-card.kpi-warning { --accent: #f59e0b; --accent-soft: rgba(245, 158, 11, 0.12); }
+.kpi-card.kpi-danger  { --accent: #f43f5e; --accent-soft: rgba(244, 63, 94, 0.12); }
 
 .kpi-icon {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  font-size: 21px;
+  font-size: 20px;
   color: #fff;
-  background: var(--accent);
-  box-shadow: 0 6px 14px -4px var(--accent);
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #000));
+  box-shadow: 0 8px 16px -6px var(--accent);
   flex-shrink: 0;
   transition: transform 0.3s var(--ease-spring);
+  z-index: 1;
 }
 
 .kpi-card:hover .kpi-icon {
-  transform: scale(1.06) rotate(-4deg);
+  transform: scale(1.08) rotate(-4deg);
 }
 
-.kpi-info { flex: 1; min-width: 0; position: relative; }
+.kpi-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
 
 .kpi-label {
-  font-size: 12px;
-  color: var(--text-tertiary);
+  font-size: 12.5px;
+  color: var(--text-secondary);
   margin-bottom: 4px;
   font-weight: 500;
-  letter-spacing: 0.2px;
 }
 
 .kpi-value {
@@ -544,15 +550,12 @@ const deptSalaryOption = computed(() => {
   line-height: 1.1;
   letter-spacing: -0.02em;
   font-feature-settings: 'tnum';
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-regular) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
 }
 
 .kpi-sub {
   font-size: 11.5px;
   color: var(--text-tertiary);
-  margin-top: 6px;
+  margin-top: 5px;
   font-weight: 500;
 }
 
@@ -561,18 +564,26 @@ const deptSalaryOption = computed(() => {
 }
 
 @keyframes kpiIn {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 /* 图表卡片 */
-.chart-row { margin: 0 !important; }
+.chart-row { margin: 0 !important; flex-shrink: 0; }
 .chart-card {
   border-radius: var(--radius-lg) !important;
   border: 1px solid var(--border-subtle) !important;
+  transition: all 0.3s var(--ease-out);
+  height: 100%;
 }
-.chart-card :deep(.el-card__header) { padding: 12px 16px; }
-.chart-card :deep(.el-card__body) { padding: 12px 16px; }
+
+.chart-card:hover {
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-md);
+}
+
+.chart-card :deep(.el-card__header) { padding: 12px 18px; }
+.chart-card :deep(.el-card__body) { padding: 12px 18px; }
 
 .card-header {
   display: flex;
@@ -582,7 +593,7 @@ const deptSalaryOption = computed(() => {
 }
 
 .chart-title {
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   display: inline-flex;
@@ -604,13 +615,13 @@ const deptSalaryOption = computed(() => {
   inset: -4px;
   border-radius: 50%;
   background: inherit;
-  opacity: 0.18;
+  opacity: 0.2;
   filter: blur(2px);
   z-index: -1;
 }
 
 .chart-sub {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--text-tertiary);
   font-weight: 500;
 }

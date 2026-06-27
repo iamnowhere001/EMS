@@ -21,44 +21,48 @@
         <el-menu
           :default-active="activeMenu"
           :collapse="isCollapsed"
+          :collapse-transition="false"
           class="sidebar-menu"
           @select="handleMenuSelect"
         >
+          <div class="menu-group" v-show="!isCollapsed">
+            <span class="menu-group-title">工作台</span>
+          </div>
+          <el-menu-item index="/dashboard">
+            <el-icon><DataLine /></el-icon>
+            <template #title>数据看板</template>
+          </el-menu-item>
           <el-menu-item index="/employee">
             <el-icon><UserFilled /></el-icon>
             <template #title>员工管理</template>
           </el-menu-item>
           <el-menu-item index="/organization">
-            <el-icon><Connection /></el-icon>
-            <template #title>组织架构</template>
+            <el-icon><OfficeBuilding /></el-icon>
+            <template #title>组织设置</template>
           </el-menu-item>
-          <el-menu-item index="/dashboard">
-            <el-icon><DataLine /></el-icon>
-            <template #title>数据看板</template>
-          </el-menu-item>
-          <el-menu-item index="/workflow">
-            <el-icon><Document /></el-icon>
-            <template #title>入转调离</template>
-          </el-menu-item>
+
+          <div class="menu-group" v-show="!isCollapsed">
+            <span class="menu-group-title">人事考勤</span>
+          </div>
           <el-menu-item index="/attendance">
             <el-icon><Clock /></el-icon>
             <template #title>考勤管理</template>
           </el-menu-item>
+
+          <div class="menu-group" v-show="!isCollapsed">
+            <span class="menu-group-title">薪酬福利</span>
+          </div>
           <el-menu-item index="/salary">
             <el-icon><Money /></el-icon>
-            <template #title>薪资管理</template>
+            <template #title>薪资社保</template>
           </el-menu-item>
-          <el-menu-item index="/social-security">
-            <el-icon><Wallet /></el-icon>
-            <template #title>社保公积金</template>
-          </el-menu-item>
-          <el-menu-item v-if="isAdmin()" index="/dictionary">
-            <el-icon><OfficeBuilding /></el-icon>
-            <template #title>数据字典</template>
-          </el-menu-item>
-          <el-menu-item v-if="isAdmin()" index="/user">
-            <el-icon><User /></el-icon>
-            <template #title>用户管理</template>
+
+          <div class="menu-group" v-show="!isCollapsed">
+            <span class="menu-group-title">系统管理</span>
+          </div>
+          <el-menu-item v-if="isAdmin()" index="/system">
+            <el-icon><Setting /></el-icon>
+            <template #title>系统设置</template>
           </el-menu-item>
         </el-menu>
 
@@ -78,20 +82,28 @@
         <!-- 顶部栏 -->
         <el-header v-if="!isLoginPage" class="app-header">
           <div class="header-left">
-            <span class="page-title">{{ pageTitle }}</span>
-            <span class="page-divider"></span>
-            <span class="page-breadcrumb">/ {{ pageSubtitle }}</span>
+            <div class="breadcrumb-wrap">
+              <span class="breadcrumb-icon">
+                <el-icon><Menu /></el-icon>
+              </span>
+              <span class="page-title">{{ pageTitle }}</span>
+              <span class="breadcrumb-sep">/</span>
+              <span class="page-breadcrumb">{{ pageSubtitle }}</span>
+            </div>
           </div>
           <div class="header-actions">
             <el-tooltip :content="isDark ? '切换浅色模式' : '切换暗黑模式'" placement="bottom">
-              <div class="theme-toggle" @click="toggleTheme">
-                <el-icon v-if="isDark" class="theme-icon"><Sunny /></el-icon>
-                <el-icon v-else class="theme-icon"><Moon /></el-icon>
+              <div class="header-icon-btn" @click="toggleTheme">
+                <el-icon v-if="isDark" class="icon"><Sunny /></el-icon>
+                <el-icon v-else class="icon"><Moon /></el-icon>
               </div>
             </el-tooltip>
             <el-badge is-dot class="notice-badge" :hidden="true">
-              <el-icon class="notice-icon"><Bell /></el-icon>
+              <div class="header-icon-btn">
+                <el-icon class="icon"><Bell /></el-icon>
+              </div>
             </el-badge>
+            <div class="header-divider"></div>
             <el-dropdown @command="handleCommand">
               <div class="user-card">
                 <el-avatar :size="34" :icon="UserFilled" class="user-avatar" />
@@ -133,7 +145,7 @@
 import { computed, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Management, UserFilled, Bell, ArrowDown, SwitchButton, Sunny, Moon, OfficeBuilding, Key, DataLine, User, Document, Clock, Money, Wallet, Expand, Fold, Connection } from '@element-plus/icons-vue'
+import { Management, UserFilled, Bell, ArrowDown, SwitchButton, Sunny, Moon, Key, DataLine, Clock, Money, Expand, Fold, Setting, Menu, OfficeBuilding } from '@element-plus/icons-vue'
 import { useTheme } from '@/composables/useTheme'
 import { isAdmin } from '@/utils/auth'
 import { STORAGE_KEYS } from '@/utils/constants'
@@ -152,14 +164,11 @@ const activeMenu = computed(() => route.path)
 const pageTitle = computed(() => {
   const map: Record<string, string> = {
     '/employee': '员工管理',
-    '/organization': '组织架构',
+    '/organization': '组织设置',
     '/dashboard': '数据看板',
-    '/workflow': '入转调离',
     '/attendance': '考勤管理',
-    '/salary': '薪资管理',
-    '/social-security': '社保公积金',
-    '/dictionary': '组织基础数据',
-    '/user': '用户管理',
+    '/salary': '薪资社保',
+    '/system': '系统设置',
     '/login': '登录',
   }
   return map[route.path] || '员工管理系统'
@@ -168,14 +177,11 @@ const pageTitle = computed(() => {
 const pageSubtitle = computed(() => {
   const map: Record<string, string> = {
     '/employee': '人员档案',
-    '/organization': '组织结构',
+    '/organization': '部门 · 岗位 · 职级',
     '/dashboard': '核心指标',
-    '/workflow': '变更台账',
     '/attendance': '签到打卡',
-    '/salary': '月度结算',
-    '/social-security': '基数配置',
-    '/dictionary': '基础数据字典',
-    '/user': '账号与角色',
+    '/salary': '薪资结算 · 社保配置',
+    '/system': '用户管理 · 操作日志',
   }
   return map[route.path] || '首页'
 })
@@ -245,18 +251,16 @@ const passwordDialogVisible = ref(false)
 
 /* ============================ 侧边栏 ============================ */
 .app-sidebar {
-  background:
-    radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
-    linear-gradient(180deg, #0f172a 0%, #0b1120 100%);
+  background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
-  transition: width 0.32s var(--ease-out);
+  transition: width 0.32s var(--ease-out), background 0.3s ease;
   overflow: hidden;
   flex-shrink: 0;
   position: relative;
-  box-shadow: 4px 0 20px -4px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--sidebar-shadow);
   z-index: 2;
+  border-right: 1px solid var(--sidebar-border);
 }
 
 .app-sidebar::before {
@@ -267,33 +271,49 @@ const passwordDialogVisible = ref(false)
   right: 0;
   height: 2px;
   background: linear-gradient(90deg, var(--brand-500), var(--violet-500), var(--sky-500));
-  opacity: 0.85;
+  opacity: 0.9;
+  z-index: 1;
+}
+
+.app-wrapper.dark .app-sidebar {
+  background:
+    radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 45%),
+    radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+    linear-gradient(180deg, #0f172a 0%, #0b1120 100%);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 4px 0 24px -4px rgba(15, 23, 42, 0.22);
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 20px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  min-height: 70px;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--sidebar-border);
+  min-height: 64px;
   box-sizing: border-box;
-  transition: padding 0.32s var(--ease-out);
+  transition: padding 0.32s var(--ease-out), border-color 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.app-wrapper.dark .sidebar-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .app-sidebar.collapsed .sidebar-header {
-  padding: 20px 16px;
+  padding: 18px 14px;
   justify-content: center;
 }
 
 .logo-box {
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   background: linear-gradient(135deg, var(--brand-500) 0%, var(--violet-500) 100%);
   box-shadow:
-    0 6px 16px -4px rgba(99, 102, 241, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    0 6px 14px -4px rgba(99, 102, 241, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -306,22 +326,22 @@ const passwordDialogVisible = ref(false)
   content: '';
   position: absolute;
   inset: -2px;
-  border-radius: 13px;
+  border-radius: 12px;
   background: linear-gradient(135deg, var(--brand-500), var(--violet-500));
   filter: blur(10px);
-  opacity: 0.4;
+  opacity: 0.3;
   z-index: -1;
 }
 
 .logo-box:hover {
   transform: scale(1.06) rotate(-3deg);
   box-shadow:
-    0 8px 22px -4px rgba(99, 102, 241, 0.65),
+    0 8px 20px -4px rgba(99, 102, 241, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .logo-icon {
-  font-size: 22px;
+  font-size: 20px;
   color: #fff;
   transition: transform 0.3s var(--ease-spring);
 }
@@ -337,55 +357,109 @@ const passwordDialogVisible = ref(false)
 }
 
 .logo-title {
-  font-size: 15.5px;
+  font-size: 15px;
   font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.2px;
+  color: var(--sidebar-text-primary);
+  letter-spacing: -0.01em;
   white-space: nowrap;
   line-height: 1.2;
 }
 
+.app-wrapper.dark .logo-title {
+  color: #fff;
+}
+
 .logo-subtitle {
-  font-size: 10px;
-  color: rgba(148, 163, 184, 0.75);
-  margin-top: 4px;
+  font-size: 9.5px;
+  color: var(--sidebar-text-tertiary);
+  margin-top: 3px;
   font-weight: 600;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.2px;
   white-space: nowrap;
   font-family: var(--font-mono);
+}
+
+.app-wrapper.dark .logo-subtitle {
+  color: rgba(148, 163, 184, 0.6);
 }
 
 .sidebar-menu {
   flex: 1;
   border-right: none;
   background: transparent;
-  padding: 12px 10px;
+  padding: 6px 8px 10px;
   overflow-y: auto;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 .sidebar-menu::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 .sidebar-menu::-webkit-scrollbar-track { background: transparent; }
 .sidebar-menu::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--sidebar-scrollbar);
   border-radius: var(--radius-full);
 }
-.sidebar-menu::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
+.sidebar-menu::-webkit-scrollbar-thumb:hover { background: var(--sidebar-scrollbar-hover); }
+
+.app-wrapper.dark .sidebar-menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+.app-wrapper.dark .sidebar-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.menu-group {
+  padding: 14px 10px 5px;
+}
+
+.menu-group-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--sidebar-text-tertiary);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  position: relative;
+  padding-left: 8px;
+}
+
+.menu-group-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--brand-500);
+  opacity: 0.7;
+}
+
+.app-wrapper.dark .menu-group-title {
+  color: rgba(148, 163, 184, 0.45);
+}
 
 .sidebar-menu :deep(.el-menu-item) {
-  color: rgba(203, 213, 225, 0.78);
-  height: 44px;
-  line-height: 44px;
-  margin: 3px 0;
-  border-radius: var(--radius-sm);
-  transition: all 0.22s var(--ease-out);
+  color: var(--sidebar-text-secondary);
+  height: 42px;
+  line-height: 42px;
+  margin: 2px 0;
+  border-radius: 8px;
+  transition: all 0.2s var(--ease-out);
   position: relative;
   overflow: hidden;
   padding: 0 12px !important;
   font-weight: 500;
-  font-size: 13.5px;
+  font-size: 13px;
+}
+
+.app-wrapper.dark .sidebar-menu :deep(.el-menu-item) {
+  color: rgba(203, 213, 225, 0.72);
 }
 
 .sidebar-menu :deep(.el-menu-item::before) {
@@ -395,49 +469,81 @@ const passwordDialogVisible = ref(false)
   top: 50%;
   transform: translateY(-50%) scaleY(0);
   width: 3px;
-  height: 18px;
+  height: 16px;
   background: linear-gradient(180deg, var(--brand-400), var(--violet-500));
   border-radius: 0 3px 3px 0;
   transition: transform 0.22s var(--ease-out);
+  opacity: 0;
+}
+
+.app-wrapper.dark .sidebar-menu :deep(.el-menu-item::before) {
+  opacity: 1;
 }
 
 .sidebar-menu :deep(.el-menu-item:hover) {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text-primary);
   transform: translateX(2px);
 }
 
+.app-wrapper.dark .sidebar-menu :deep(.el-menu-item:hover) {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
 .sidebar-menu :deep(.el-menu-item:hover::before) {
-  transform: translateY(-50%) scaleY(0.55);
+  transform: translateY(-50%) scaleY(0.6);
+  opacity: 1;
 }
 
 .sidebar-menu :deep(.el-menu-item.is-active) {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  font-weight: 600;
+  box-shadow: var(--sidebar-active-shadow);
+}
+
+.app-wrapper.dark .sidebar-menu :deep(.el-menu-item.is-active) {
   background: linear-gradient(90deg, rgba(99, 102, 241, 0.22) 0%, rgba(139, 92, 246, 0.12) 100%);
   color: #fff;
-  font-weight: 600;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .sidebar-menu :deep(.el-menu-item.is-active::before) {
   transform: translateY(-50%) scaleY(1);
-  height: 22px;
+  height: 20px;
+  opacity: 1;
 }
 
 .sidebar-menu :deep(.el-menu-item.is-active .el-icon) {
+  color: var(--sidebar-active-icon);
+  filter: var(--sidebar-icon-glow);
+}
+
+.app-wrapper.dark .sidebar-menu :deep(.el-menu-item.is-active .el-icon) {
   color: var(--brand-300);
   filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.5));
 }
 
 .sidebar-menu :deep(.el-menu-item .el-icon) {
-  font-size: 18px;
-  margin-right: 12px;
+  font-size: 17px;
+  margin-right: 11px;
   transition: all 0.22s var(--ease-out);
-  color: rgba(148, 163, 184, 0.85);
+  color: var(--sidebar-icon-color);
+}
+
+.app-wrapper.dark .sidebar-menu :deep(.el-menu-item .el-icon) {
+  color: rgba(148, 163, 184, 0.8);
 }
 
 .sidebar-menu :deep(.el-menu-item:hover .el-icon) {
+  color: var(--brand-500);
+  transform: scale(1.08);
+}
+
+.app-wrapper.dark .sidebar-menu :deep(.el-menu-item:hover .el-icon) {
   color: #fff;
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .sidebar-menu.el-menu--collapse :deep(.el-menu-item .el-icon) { margin-right: 0; }
@@ -445,9 +551,13 @@ const passwordDialogVisible = ref(false)
 .sidebar-menu.el-menu--collapse :deep(.el-menu-item .el-menu-item__title) { display: none; }
 
 .sidebar-footer {
-  padding: 10px;
+  padding: 8px;
+  border-top: 1px solid var(--sidebar-border);
+  transition: padding 0.32s var(--ease-out), border-color 0.3s ease;
+}
+
+.app-wrapper.dark .sidebar-footer {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  transition: padding 0.32s var(--ease-out);
 }
 
 .collapse-btn {
@@ -455,30 +565,38 @@ const passwordDialogVisible = ref(false)
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px;
-  border-radius: var(--radius-sm);
-  color: rgba(148, 163, 184, 0.85);
+  padding: 9px;
+  border-radius: 8px;
+  color: var(--sidebar-text-secondary);
   cursor: pointer;
   transition: all 0.22s var(--ease-out);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.3px;
+}
+
+.app-wrapper.dark .collapse-btn {
+  color: rgba(148, 163, 184, 0.75);
 }
 
 .collapse-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text-primary);
   transform: translateX(2px);
 }
 
+.app-wrapper.dark .collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
 .collapse-btn .el-icon {
-  font-size: 15px;
+  font-size: 14px;
   transition: transform 0.3s var(--ease-spring);
 }
 
 .collapse-btn:hover .el-icon { transform: translateX(-2px); }
 .app-sidebar.collapsed .collapse-btn:hover .el-icon { transform: translateX(2px); }
-.app-sidebar.collapsed .collapse-btn { padding: 10px; justify-content: center; }
+.app-sidebar.collapsed .collapse-btn { padding: 9px; justify-content: center; }
 
 /* ============================ 主容器 ============================ */
 .main-container {
@@ -516,22 +634,48 @@ const passwordDialogVisible = ref(false)
   gap: 10px;
 }
 
+.breadcrumb-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.breadcrumb-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--dur-base) var(--ease-out);
+}
+
+.breadcrumb-icon:hover {
+  background: var(--bg-soft);
+  color: var(--brand-600);
+}
+
+.breadcrumb-icon .el-icon {
+  font-size: 18px;
+}
+
 .page-title {
   font-size: 15.5px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
-.page-divider {
-  width: 1px;
-  height: 14px;
-  background: var(--border-default);
-  display: inline-block;
+.breadcrumb-sep {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .page-breadcrumb {
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--text-tertiary);
   font-weight: 500;
   letter-spacing: 0.1px;
@@ -542,10 +686,10 @@ const passwordDialogVisible = ref(false)
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.theme-toggle {
+.header-icon-btn {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
@@ -556,48 +700,55 @@ const passwordDialogVisible = ref(false)
   justify-content: center;
   cursor: pointer;
   transition: all var(--dur-base) var(--ease-out);
+  position: relative;
 }
 
-.app-wrapper.dark .theme-toggle {
+.app-wrapper.dark .header-icon-btn {
   background: var(--bg-soft);
   border-color: var(--border-default);
 }
 
-.theme-toggle:hover {
+.header-icon-btn:hover {
   background: var(--brand-50);
   border-color: var(--brand-200);
   color: var(--brand-600);
-  transform: rotate(15deg) scale(1.05);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
-.app-wrapper.dark .theme-toggle:hover {
+.app-wrapper.dark .header-icon-btn:hover {
   background: rgba(99, 102, 241, 0.1);
   border-color: rgba(99, 102, 241, 0.3);
   color: var(--brand-300);
 }
 
-.theme-icon {
+.header-icon-btn .icon {
   font-size: 17px;
-  transition: transform 0.3s var(--ease-spring);
+  color: var(--text-secondary);
+  transition: all var(--dur-base) var(--ease-out);
 }
 
-.theme-toggle:hover .theme-icon { transform: rotate(-15deg); }
+.header-icon-btn:hover .icon {
+  color: var(--brand-600);
+  transform: scale(1.08);
+}
+
+.app-wrapper.dark .header-icon-btn:hover .icon {
+  color: var(--brand-300);
+}
+
+.header-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-default);
+  margin: 0 4px;
+}
 
 .notice-badge {
   cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 0 4px;
-  height: 36px;
 }
-
-.notice-icon {
-  font-size: 18px;
-  opacity: 0.6;
-  transition: all var(--dur-base);
-  color: var(--text-secondary);
-}
-.notice-badge:hover .notice-icon { opacity: 1; color: var(--brand-500); }
 
 .user-card {
   display: flex;

@@ -1,102 +1,214 @@
 <template>
   <div class="social-security-page ems-page">
-    <div class="page-header">
-      <h2>社保公积金配置</h2>
-    </div>
+    <el-card class="main-card" shadow="hover">
+      <template #header>
+        <div class="card-header">
+          <PageHeader
+            title="社保公积金配置"
+            subtitle="五险一金缴费基数与比例管理"
+            :icon="Medal"
+          />
+          <div class="header-actions">
+            <el-button type="primary" :icon="Edit" @click="handleEdit">编辑配置</el-button>
+          </div>
+        </div>
+      </template>
 
-    <div class="search-area">
-      <el-form :inline="true">
-        <el-form-item label="月份">
-          <el-date-picker v-model="currentYearMonth" type="month" placeholder="选择月份" format="YYYY-MM" value-format="YYYY-MM" @change="loadData" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleEdit">编辑配置</el-button>
-        </el-form-item>
-      </el-form>
-    </div>
+      <div class="search-section">
+        <el-form :inline="true" class="search-form">
+          <el-form-item label="选择月份">
+            <el-date-picker v-model="currentYearMonth" type="month" placeholder="选择月份" format="YYYY-MM" value-format="YYYY-MM" @change="loadData" />
+          </el-form-item>
+        </el-form>
+      </div>
 
-    <el-descriptions :model="config" border column="2" v-if="config">
-      <el-descriptions-item label="养老保险基数">{{ config.pensionBase }}</el-descriptions-item>
-      <el-descriptions-item label="养老保险比例">公司 {{ config.pensionCompanyRate }}% / 个人 {{ config.pensionPersonalRate }}%</el-descriptions-item>
-      
-      <el-descriptions-item label="医疗保险基数">{{ config.medicalBase }}</el-descriptions-item>
-      <el-descriptions-item label="医疗保险比例">公司 {{ config.medicalCompanyRate }}% / 个人 {{ config.medicalPersonalRate }}%</el-descriptions-item>
-      
-      <el-descriptions-item label="失业保险基数">{{ config.unemploymentBase }}</el-descriptions-item>
-      <el-descriptions-item label="失业保险比例">公司 {{ config.unemploymentCompanyRate }}% / 个人 {{ config.unemploymentPersonalRate }}%</el-descriptions-item>
-      
-      <el-descriptions-item label="工伤保险基数">{{ config.injuryBase }}</el-descriptions-item>
-      <el-descriptions-item label="工伤保险比例">公司 {{ config.injuryCompanyRate }}%</el-descriptions-item>
-      
-      <el-descriptions-item label="生育保险基数">{{ config.maternityBase }}</el-descriptions-item>
-      <el-descriptions-item label="生育保险比例">公司 {{ config.maternityCompanyRate }}%</el-descriptions-item>
-      
-      <el-descriptions-item label="公积金基数">{{ config.housingFundBase }}</el-descriptions-item>
-      <el-descriptions-item label="公积金比例">公司 {{ config.housingFundCompanyRate }}% / 个人 {{ config.housingFundPersonalRate }}%</el-descriptions-item>
-    </el-descriptions>
+      <div v-if="config" class="config-content">
+        <div class="config-section">
+          <div class="section-title">
+            <el-icon class="section-icon"><Coin /></el-icon>
+            <span>基本养老保险</span>
+          </div>
+          <div class="section-grid">
+            <div class="config-item">
+              <span class="item-label">缴费基数</span>
+              <span class="item-value ems-mono">¥{{ (config.pensionBase || 0).toFixed(2) }}</span>
+            </div>
+            <div class="config-item">
+              <span class="item-label">公司比例</span>
+              <span class="item-value ems-mono">{{ config.pensionCompanyRate || 0 }}%</span>
+            </div>
+            <div class="config-item">
+              <span class="item-label">个人比例</span>
+              <span class="item-value ems-mono">{{ config.pensionPersonalRate || 0 }}%</span>
+            </div>
+          </div>
+        </div>
 
-    <el-empty v-else description="暂无配置数据" />
+        <div class="config-section">
+          <div class="section-title">
+            <el-icon class="section-icon"><FirstAidKit /></el-icon>
+            <span>基本医疗保险</span>
+          </div>
+          <div class="section-grid">
+            <div class="config-item">
+              <span class="item-label">缴费基数</span>
+              <span class="item-value ems-mono">¥{{ (config.medicalBase || 0).toFixed(2) }}</span>
+            </div>
+            <div class="config-item">
+              <span class="item-label">公司比例</span>
+              <span class="item-value ems-mono">{{ config.medicalCompanyRate || 0 }}%</span>
+            </div>
+            <div class="config-item">
+              <span class="item-label">个人比例</span>
+              <span class="item-value ems-mono">{{ config.medicalPersonalRate || 0 }}%</span>
+            </div>
+          </div>
+        </div>
 
-    <el-dialog v-model="dialogVisible" title="编辑社保公积金配置" width="700px">
-      <el-form :model="form" label-width="140px">
+        <div class="config-section">
+          <div class="section-title">
+            <el-icon class="section-icon"><Briefcase /></el-icon>
+            <span>失业保险</span>
+          </div>
+          <div class="section-grid">
+            <div class="config-item">
+              <span class="item-label">缴费基数</span>
+              <span class="item-value ems-mono">¥{{ (config.unemploymentBase || 0).toFixed(2) }}</span>
+            </div>
+            <div class="config-item">
+              <span class="item-label">公司比例</span>
+              <span class="item-value ems-mono">{{ config.unemploymentCompanyRate || 0 }}%</span>
+            </div>
+            <div class="config-item">
+              <span class="item-label">个人比例</span>
+              <span class="item-value ems-mono">{{ config.unemploymentPersonalRate || 0 }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="section-title">
+            <el-icon class="section-icon"><Warning /></el-icon>
+            <span>工伤保险</span>
+          </div>
+          <div class="section-grid">
+            <div class="config-item">
+              <span class="item-label">缴费基数</span>
+              <span class="item-value ems-mono">¥{{ (config.injuryBase || 0).toFixed(2) }}</span>
+            </div>
+            <div class="config-item">
+              <span class="item-label">公司比例</span>
+              <span class="item-value ems-mono">{{ config.injuryCompanyRate || 0 }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="section-title">
+            <el-icon class="section-icon"><Cherry /></el-icon>
+            <span>生育保险</span>
+          </div>
+          <div class="section-grid">
+            <div class="config-item">
+              <span class="item-label">缴费基数</span>
+              <span class="item-value ems-mono">¥{{ (config.maternityBase || 0).toFixed(2) }}</span>
+            </div>
+            <div class="config-item">
+              <span class="item-label">公司比例</span>
+              <span class="item-value ems-mono">{{ config.maternityCompanyRate || 0 }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="section-title">
+            <el-icon class="section-icon"><OfficeBuilding /></el-icon>
+            <span>住房公积金</span>
+          </div>
+          <div class="section-grid">
+            <div class="config-item">
+              <span class="item-label">缴费基数</span>
+              <span class="item-value ems-mono">¥{{ (config.housingFundBase || 0).toFixed(2) }}</span>
+            </div>
+            <div class="config-item">
+              <span class="item-label">公司比例</span>
+              <span class="item-value ems-mono">{{ config.housingFundCompanyRate || 0 }}%</span>
+            </div>
+            <div class="config-item">
+              <span class="item-label">个人比例</span>
+              <span class="item-value ems-mono">{{ config.housingFundPersonalRate || 0 }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="empty-state">
+        <el-empty description="暂无配置数据" :image-size="120">
+          <el-button type="primary" :icon="Edit" @click="handleEdit">新增配置</el-button>
+        </el-empty>
+      </div>
+    </el-card>
+
+    <el-dialog v-model="dialogVisible" title="编辑社保公积金配置" width="680px">
+      <el-form :model="form" label-width="130px">
         <el-divider content-position="left">养老保险</el-divider>
-        <el-form-item label="基数">
-          <el-input-number v-model="form.pensionBase" :min="0" :precision="2" />
+        <el-form-item label="缴费基数">
+          <el-input-number v-model="form.pensionBase" :min="0" :precision="2" style="width: 200px" />
         </el-form-item>
         <el-form-item label="公司比例(%)">
-          <el-input-number v-model="form.pensionCompanyRate" :min="0" :max="100" :precision="2" />
+          <el-input-number v-model="form.pensionCompanyRate" :min="0" :max="100" :precision="2" style="width: 200px" />
         </el-form-item>
         <el-form-item label="个人比例(%)">
-          <el-input-number v-model="form.pensionPersonalRate" :min="0" :max="100" :precision="2" />
+          <el-input-number v-model="form.pensionPersonalRate" :min="0" :max="100" :precision="2" style="width: 200px" />
         </el-form-item>
 
         <el-divider content-position="left">医疗保险</el-divider>
-        <el-form-item label="基数">
-          <el-input-number v-model="form.medicalBase" :min="0" :precision="2" />
+        <el-form-item label="缴费基数">
+          <el-input-number v-model="form.medicalBase" :min="0" :precision="2" style="width: 200px" />
         </el-form-item>
         <el-form-item label="公司比例(%)">
-          <el-input-number v-model="form.medicalCompanyRate" :min="0" :max="100" :precision="2" />
+          <el-input-number v-model="form.medicalCompanyRate" :min="0" :max="100" :precision="2" style="width: 200px" />
         </el-form-item>
         <el-form-item label="个人比例(%)">
-          <el-input-number v-model="form.medicalPersonalRate" :min="0" :max="100" :precision="2" />
+          <el-input-number v-model="form.medicalPersonalRate" :min="0" :max="100" :precision="2" style="width: 200px" />
         </el-form-item>
 
         <el-divider content-position="left">失业保险</el-divider>
-        <el-form-item label="基数">
-          <el-input-number v-model="form.unemploymentBase" :min="0" :precision="2" />
+        <el-form-item label="缴费基数">
+          <el-input-number v-model="form.unemploymentBase" :min="0" :precision="2" style="width: 200px" />
         </el-form-item>
         <el-form-item label="公司比例(%)">
-          <el-input-number v-model="form.unemploymentCompanyRate" :min="0" :max="100" :precision="2" />
+          <el-input-number v-model="form.unemploymentCompanyRate" :min="0" :max="100" :precision="2" style="width: 200px" />
         </el-form-item>
         <el-form-item label="个人比例(%)">
-          <el-input-number v-model="form.unemploymentPersonalRate" :min="0" :max="100" :precision="2" />
+          <el-input-number v-model="form.unemploymentPersonalRate" :min="0" :max="100" :precision="2" style="width: 200px" />
         </el-form-item>
 
         <el-divider content-position="left">工伤保险</el-divider>
-        <el-form-item label="基数">
-          <el-input-number v-model="form.injuryBase" :min="0" :precision="2" />
+        <el-form-item label="缴费基数">
+          <el-input-number v-model="form.injuryBase" :min="0" :precision="2" style="width: 200px" />
         </el-form-item>
         <el-form-item label="公司比例(%)">
-          <el-input-number v-model="form.injuryCompanyRate" :min="0" :max="100" :precision="2" />
+          <el-input-number v-model="form.injuryCompanyRate" :min="0" :max="100" :precision="2" style="width: 200px" />
         </el-form-item>
 
         <el-divider content-position="left">生育保险</el-divider>
-        <el-form-item label="基数">
-          <el-input-number v-model="form.maternityBase" :min="0" :precision="2" />
+        <el-form-item label="缴费基数">
+          <el-input-number v-model="form.maternityBase" :min="0" :precision="2" style="width: 200px" />
         </el-form-item>
         <el-form-item label="公司比例(%)">
-          <el-input-number v-model="form.maternityCompanyRate" :min="0" :max="100" :precision="2" />
+          <el-input-number v-model="form.maternityCompanyRate" :min="0" :max="100" :precision="2" style="width: 200px" />
         </el-form-item>
 
         <el-divider content-position="left">住房公积金</el-divider>
-        <el-form-item label="基数">
-          <el-input-number v-model="form.housingFundBase" :min="0" :precision="2" />
+        <el-form-item label="缴费基数">
+          <el-input-number v-model="form.housingFundBase" :min="0" :precision="2" style="width: 200px" />
         </el-form-item>
         <el-form-item label="公司比例(%)">
-          <el-input-number v-model="form.housingFundCompanyRate" :min="0" :max="100" :precision="2" />
+          <el-input-number v-model="form.housingFundCompanyRate" :min="0" :max="100" :precision="2" style="width: 200px" />
         </el-form-item>
         <el-form-item label="个人比例(%)">
-          <el-input-number v-model="form.housingFundPersonalRate" :min="0" :max="100" :precision="2" />
+          <el-input-number v-model="form.housingFundPersonalRate" :min="0" :max="100" :precision="2" style="width: 200px" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -110,7 +222,11 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import {
+  Medal, Edit, Coin, FirstAidKit, Briefcase, Warning, Cherry, OfficeBuilding,
+} from '@element-plus/icons-vue'
 import { socialSecurityApi, type SocialSecurityConfig } from '@/api/socialSecurity'
+import PageHeader from '@/components/PageHeader.vue'
 
 const config = ref<SocialSecurityConfig | null>(null)
 const dialogVisible = ref(false)
@@ -186,26 +302,129 @@ onMounted(() => {
 
 <style scoped>
 .social-security-page {
-  min-height: calc(100vh - 56px);
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
-.page-header {
+
+.main-card {
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border-subtle) !important;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.main-card :deep(.el-card__header) {
+  padding: 14px 20px;
+}
+
+.main-card :deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 16px 20px;
+}
+
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
 }
-.page-header h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
+
+.card-header .header-actions {
+  display: flex;
+  gap: 8px;
 }
-.search-area {
-  margin-bottom: 12px;
-  padding: 14px 18px;
+
+.search-section {
   background: var(--bg-soft);
   border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 16px;
   border: 1px solid var(--border-subtle);
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-form :deep(.el-form-item) {
+  margin-bottom: 0;
+  margin-right: 0;
+}
+
+.config-content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.config-section {
+  background: var(--bg-soft);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  transition: all 0.2s ease;
+}
+
+.config-section:hover {
+  border-color: var(--brand-200);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--border-default);
+}
+
+.section-icon {
+  font-size: 18px;
+  color: var(--brand-500);
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.config-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.item-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.empty-state {
+  padding: 48px 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

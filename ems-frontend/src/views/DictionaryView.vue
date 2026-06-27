@@ -1,70 +1,84 @@
 <template>
   <div class="dictionary-page ems-page">
-    <el-card class="dictionary-card" shadow="hover">
+    <el-card class="main-card" shadow="hover">
       <template #header>
         <div class="card-header">
-          <div class="title-section">
-            <div class="title-icon"><el-icon><OfficeBuilding /></el-icon></div>
-            <div>
-              <div class="title">组织架构</div>
-              <div class="subtitle">维护部门、岗位、职级等组织基础数据</div>
-            </div>
-          </div>
+          <PageHeader
+            title="组织字典"
+            subtitle="维护部门、岗位、职级等组织基础数据"
+            :icon="OfficeBuilding"
+          />
           <div class="header-actions">
-            <el-button v-if="isAdmin()" type="primary" :icon="Plus" @click="handleAdd">新增组织</el-button>
+            <el-button v-if="isAdmin()" type="primary" :icon="Plus" @click="handleAdd">新增字典</el-button>
           </div>
         </div>
       </template>
 
-      <div class="search-bar">
-        <el-radio-group v-model="currentType" @change="handleTypeChange">
-          <el-radio-button label="department">部门</el-radio-button>
-          <el-radio-button label="position">岗位</el-radio-button>
-          <el-radio-button label="rank">职级</el-radio-button>
+      <div class="filter-section">
+        <el-radio-group v-model="currentType" @change="handleTypeChange" size="default">
+          <el-radio-button label="department">
+            <el-icon style="margin-right: 4px;"><OfficeBuilding /></el-icon>
+            部门
+          </el-radio-button>
+          <el-radio-button label="position">
+            <el-icon style="margin-right: 4px;"><User /></el-icon>
+            岗位
+          </el-radio-button>
+          <el-radio-button label="rank">
+            <el-icon style="margin-right: 4px;"><Medal /></el-icon>
+            职级
+          </el-radio-button>
         </el-radio-group>
       </div>
 
       <el-table :data="tableData" v-loading="loading" class="dictionary-table">
-        <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="name" label="名称" min-width="160" />
-        <el-table-column prop="code" label="编码" min-width="120" />
-        <el-table-column v-if="currentType === 'position'" label="所属部门" min-width="140">
+        <el-table-column type="index" label="序号" width="70" align="center" />
+        <el-table-column prop="name" label="名称" min-width="180">
           <template #default="{ row }">
-            <el-tag size="small" effect="light" type="info">
-              <el-icon style="margin-right: 4px;"><OfficeBuilding /></el-icon>
+            <span class="dict-name">{{ row.name }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="code" label="编码" min-width="140">
+          <template #default="{ row }">
+            <span class="dict-code ems-mono">{{ row.code }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="currentType === 'position'" label="所属部门" min-width="160">
+          <template #default="{ row }">
+            <el-tag size="small" effect="light" type="primary">
               {{ departmentNameMap[row.parentCode] || row.parentCode || '-' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="sort" label="排序" width="80" align="center" />
-        <el-table-column prop="status" label="状态" width="90" align="center">
+        <el-table-column prop="sort" label="排序" width="90" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small" effect="dark" round>
+            <span class="sort-value ems-mono">{{ row.sort }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small" effect="light" round>
               {{ row.status === 1 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" align="center" fixed="right">
+        <el-table-column label="操作" width="160" align="center" fixed="right" v-if="isAdmin()">
           <template #default="{ row }">
-            <el-tooltip content="编辑" placement="top" v-if="isAdmin()">
-              <el-button type="primary" size="small" circle :icon="Edit" @click="handleEdit(row)" />
-            </el-tooltip>
-            <el-tooltip content="删除" placement="top" v-if="isAdmin()">
-              <el-button type="danger" size="small" circle :icon="Delete" @click="handleDelete(row)" />
-            </el-tooltip>
+            <el-button size="small" type="primary" link :icon="Edit" @click="handleEdit(row)">编辑</el-button>
+            <el-button size="small" type="danger" link :icon="Delete" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
 
       <div v-if="tableData.length === 0 && !loading" class="empty-state">
-        <el-empty description="暂无组织数据" :image-size="120">
-          <el-button v-if="isAdmin()" type="primary" :icon="Plus" @click="handleAdd">新增组织</el-button>
+        <el-empty description="暂无数据" :image-size="120">
+          <el-button v-if="isAdmin()" type="primary" :icon="Plus" @click="handleAdd">新增字典</el-button>
         </el-empty>
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑组织' : '新增组织'" width="480px" align-center>
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="90px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑字典' : '新增字典'" width="480px">
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="类型" prop="type">
           <el-radio-group v-model="form.type" :disabled="isEdit">
             <el-radio label="department">部门</el-radio>
@@ -76,10 +90,10 @@
           <el-input v-model="form.name" placeholder="请输入名称" clearable />
         </el-form-item>
         <el-form-item label="编码" prop="code">
-          <el-input v-model="form.code" placeholder="请输入编码，默认同名称" clearable />
+          <el-input v-model="form.code" placeholder="请输入编码，留空则同名称" clearable />
         </el-form-item>
         <el-form-item v-if="form.type === 'position'" label="所属部门" prop="parentCode">
-          <el-select v-model="form.parentCode" placeholder="请选择所属部门" clearable filterable class="full-width">
+          <el-select v-model="form.parentCode" placeholder="请选择所属部门" clearable filterable style="width: 100%">
             <el-option
               v-for="dept in departments"
               :key="dept.code"
@@ -89,7 +103,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="排序" prop="sort">
-          <el-input-number v-model="form.sort" :min="0" class="full-width" />
+          <el-input-number v-model="form.sort" :min="0" style="width: 100%" />
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="form.status">
@@ -109,9 +123,10 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, Check, OfficeBuilding } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Check, OfficeBuilding, User, Medal } from '@element-plus/icons-vue'
 import { dictionaryApi, type Dictionary } from '@/api/dictionary'
 import { isAdmin } from '@/utils/auth'
+import PageHeader from '@/components/PageHeader.vue'
 
 const loading = ref(false)
 const tableData = ref<Dictionary[]>([])
@@ -243,27 +258,30 @@ onMounted(() => {
 <style scoped>
 .dictionary-page {
   height: calc(100vh - 56px);
-  overflow: hidden;
+  overflow-y: auto;
   box-sizing: border-box;
-}
-
-.dictionary-card {
-  height: 100%;
   display: flex;
   flex-direction: column;
-  border-radius: var(--radius-lg) !important;
-  border: 1px solid var(--border-subtle) !important;
 }
 
-.dictionary-card :deep(.el-card__header) {
+.main-card {
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border-subtle) !important;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.main-card :deep(.el-card__header) {
   padding: 14px 20px;
 }
 
-.dictionary-card :deep(.el-card__body) {
+.main-card :deep(.el-card__body) {
   flex: 1;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   padding: 16px 20px;
 }
 
@@ -273,59 +291,82 @@ onMounted(() => {
   justify-content: space-between;
 }
 
-.title-section {
+.filter-section {
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.title-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 19px;
-  box-shadow: 0 6px 14px -4px rgba(99, 102, 241, 0.5);
-  transition: transform 0.3s var(--ease-spring);
+.dictionary-table {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--border-subtle);
 }
-.title-icon:hover { transform: scale(1.06) rotate(-4deg); }
 
-.title {
-  font-size: 16px;
+.dictionary-table :deep(.el-table__body-wrapper) {
+  overflow-x: auto;
+}
+
+.dictionary-table :deep(.el-table__fixed-right) {
+  background: var(--bg-soft);
+  z-index: 10;
+  left: auto;
+  right: 0;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.dictionary-table :deep(.el-table__fixed-right-patch) {
+  background: var(--bg-soft);
+}
+
+.dictionary-table :deep(.el-table__fixed-right::before) {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-subtle);
+  z-index: 1;
+}
+
+.dict-name {
   font-weight: 600;
   color: var(--text-primary);
-  letter-spacing: -0.01em;
+  font-size: 13px;
 }
 
-.subtitle {
+.dict-code {
   font-size: 12px;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-  font-weight: 500;
+  color: var(--brand-700);
+  background: var(--brand-50);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  border: 1px solid var(--brand-100);
 }
 
-.search-bar {
-  margin-bottom: 12px;
-  flex-shrink: 0;
-}
-
-.dictionary-table {
-  flex: 1;
-  overflow: hidden;
+.sort-value {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
 }
 
 .empty-state {
+  padding: 48px 0;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
-}
-
-.full-width {
-  width: 100%;
 }
 </style>

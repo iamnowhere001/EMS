@@ -33,16 +33,6 @@ const router = createRouter({
       component: () => import('../views/DashboardView.vue'),
     },
     {
-      path: '/user',
-      name: 'user',
-      component: () => import('../views/UserView.vue'),
-    },
-    {
-      path: '/workflow',
-      name: 'workflow',
-      component: () => import('../views/WorkflowView.vue'),
-    },
-    {
       path: '/attendance',
       name: 'attendance',
       component: () => import('../views/AttendanceView.vue'),
@@ -53,14 +43,9 @@ const router = createRouter({
       component: () => import('../views/SalaryView.vue'),
     },
     {
-      path: '/social-security',
-      name: 'socialSecurity',
-      component: () => import('../views/SocialSecurityView.vue'),
-    },
-    {
-      path: '/dictionary',
-      name: 'dictionary',
-      component: () => import('../views/DictionaryView.vue'),
+      path: '/system',
+      name: 'system',
+      component: () => import('../views/SystemView.vue'),
     },
   ],
 })
