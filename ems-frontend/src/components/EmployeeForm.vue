@@ -9,7 +9,7 @@
     @keydown.esc="handleClose"
     @keydown.ctrl.enter="handleSubmit"
   >
-    <!-- 弹窗头部：头像 + 标题 + 必填提示 -->
+    <!-- 弹窗头部：头像 + 标题 -->
     <div class="dialog-header">
       <div class="header-left">
         <el-upload
@@ -30,19 +30,11 @@
           </div>
         </el-upload>
         <div class="header-text">
-          <div class="dialog-title">{{ dialogTitle }}</div>
-          <div class="dialog-tip">
-            <span class="tip-dot"></span>
-            <span>标 <span class="required-mark">*</span> 为必填项，其他可后续补充</span>
+          <div class="dialog-title-row">
+            <div class="dialog-title">{{ dialogTitle }}</div>
+            <span class="dialog-badge">员工档案</span>
           </div>
-        </div>
-      </div>
-      <div class="header-right">
-        <div class="required-summary">
-          <div class="rs-title">必填 <em>{{ requiredFields }}</em> 项</div>
-          <div class="rs-fields">
-            <span>姓名</span><span>手机</span><span>部门</span><span>职位</span><span>入职</span><span>薪资</span>
-          </div>
+          <div class="dialog-subtitle">完善基础信息、背景资料与岗位信息</div>
         </div>
       </div>
     </div>
@@ -54,7 +46,7 @@
           <!-- 工作信息 -->
           <div class="form-section">
             <div class="section-label"><span class="label-dot work"></span>工作信息</div>
-            <el-form :model="form" :rules="rules" ref="formRef" label-width="60px" class="emp-form">
+            <el-form :model="form" :rules="rules" ref="formRef" label-width="72px" class="emp-form">
               <el-row :gutter="18">
                 <el-col :span="8">
                   <el-form-item label="工号" class="info-only">
@@ -116,7 +108,7 @@
           <!-- 基础资料 -->
           <div class="form-section">
             <div class="section-label"><span class="label-dot base"></span>基础资料</div>
-            <el-form :model="form" :rules="rules" ref="formRef2" label-width="60px" class="emp-form">
+            <el-form :model="form" :rules="rules" ref="formRef2" label-width="72px" class="emp-form">
               <el-row :gutter="18">
                 <el-col :span="8">
                   <el-form-item label="年龄">
@@ -162,7 +154,7 @@
           <!-- 联系方式 -->
           <div class="form-section">
             <div class="section-label"><span class="label-dot contact"></span>联系方式</div>
-            <el-form :model="form" :rules="rules" ref="formRef3" label-width="60px" class="emp-form">
+            <el-form :model="form" :rules="rules" ref="formRef3" label-width="72px" class="emp-form">
               <el-row :gutter="18">
                 <el-col :span="8">
                   <el-form-item label="手机号" prop="phone">
@@ -212,6 +204,12 @@
             </el-form>
           </div>
 
+        </div>
+      </el-tab-pane>
+
+      <!-- Tab 2: 背景资料 -->
+      <el-tab-pane label="背景资料" name="background">
+        <div class="tab-content">
           <!-- 家庭成员 -->
           <div class="form-section">
             <div class="section-label-row">
@@ -253,12 +251,7 @@
               </div>
             </div>
           </div>
-        </div>
-      </el-tab-pane>
 
-      <!-- Tab 2: 背景资料 -->
-      <el-tab-pane label="背景资料" name="background">
-        <div class="tab-content">
           <!-- 教育经历 -->
           <div class="form-section">
             <div class="section-label-row">
@@ -625,6 +618,11 @@ import { type Dictionary } from '@/api/dictionary'
 import { fileApi } from '@/api/file'
 import { getAvatarColor } from '@/utils/common'
 
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024
+const AVATAR_COMPRESS_THRESHOLD = 300 * 1024
+const AVATAR_MAX_DIMENSION = 512
+const AVATAR_JPEG_QUALITY = 0.82
+
 const props = defineProps<{
   visible: boolean
   isEdit: boolean
@@ -716,15 +714,6 @@ const rules = {
 }
 
 const dialogTitle = computed(() => props.isEdit ? '编辑员工档案' : '新增员工')
-const requiredFields = computed(() => {
-  let count = 0
-  const checkList = ['name', 'phone', 'department', 'position', 'hireDate', 'salary']
-  checkList.forEach((key) => {
-    const val = (form as any)[key]
-    if (val !== '' && val !== null && val !== undefined && val !== 0) count++
-  })
-  return count
-})
 
 const positionOptions = computed(() => {
   if (!form.department) return []
@@ -762,6 +751,54 @@ const resetForm = () => {
   probations.splice(0, probations.length)
 }
 
+const compressAvatarImage = (file: File): Promise<File> => {
+  if (file.type === 'image/gif' || file.size <= AVATAR_COMPRESS_THRESHOLD) {
+    return Promise.resolve(file)
+  }
+
+  return new Promise((resolve, reject) => {
+    const imageUrl = URL.createObjectURL(file)
+    const image = new Image()
+    image.onload = () => {
+      URL.revokeObjectURL(imageUrl)
+
+      const scale = Math.min(1, AVATAR_MAX_DIMENSION / Math.max(image.width, image.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.width * scale))
+      canvas.height = Math.max(1, Math.round(image.height * scale))
+
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        resolve(file)
+        return
+      }
+
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          resolve(file)
+          return
+        }
+
+        const compressedFile = new File(
+          [blob],
+          file.name.replace(/\.[^.]+$/, '') + '.jpg',
+          { type: 'image/jpeg', lastModified: Date.now() }
+        )
+        resolve(compressedFile.size < file.size ? compressedFile : file)
+      }, 'image/jpeg', AVATAR_JPEG_QUALITY)
+    }
+    image.onerror = () => {
+      URL.revokeObjectURL(imageUrl)
+      reject(new Error('图片读取失败'))
+    }
+    image.src = imageUrl
+  })
+}
+
 const handleAvatarChange = async (uploadFile: any) => {
   const rawFile = uploadFile.raw
   if (!rawFile) return
@@ -769,14 +806,16 @@ const handleAvatarChange = async (uploadFile: any) => {
     ElMessage.warning('请上传图片文件')
     return
   }
-  if (rawFile.size > 2 * 1024 * 1024) {
-    ElMessage.warning('头像图片大小不能超过 2MB')
+  if (rawFile.size > MAX_AVATAR_SIZE) {
+    ElMessage.warning('头像图片大小不能超过 5MB')
     return
   }
   try {
-    const url = await fileApi.upload(rawFile)
+    const uploadAvatar = await compressAvatarImage(rawFile)
+    const url = await fileApi.upload(uploadAvatar)
     form.avatar = url
-    ElMessage.success('头像上传成功')
+    const savedKb = Math.round((rawFile.size - uploadAvatar.size) / 1024)
+    ElMessage.success(savedKb > 0 ? `头像已压缩并上传，减少约 ${savedKb}KB` : '头像上传成功')
   } catch (error: any) {
     ElMessage.error(error.message || '头像上传失败')
   }
@@ -859,6 +898,10 @@ const handleSubmit = async () => {
 
 <style scoped>
 /* ========== 弹窗基础 ========== */
+.employee-dialog {
+  height: 760px;
+}
+
 .employee-dialog :deep(.el-dialog__header) {
   padding: 0;
   margin-right: 0;
@@ -878,10 +921,13 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+  gap: 16px;
+  padding: 14px 20px;
+  background:
+    linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.1)),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  color: var(--text-primary);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.14);
   position: relative;
   overflow: hidden;
 }
@@ -890,30 +936,30 @@ const handleSubmit = async () => {
   content: '';
   position: absolute;
   top: -50%;
-  right: -10%;
-  width: 300px;
-  height: 300px;
+  right: -8%;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 60%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.16), transparent 62%);
   pointer-events: none;
 }
 
 .dialog-header::after {
   content: '';
   position: absolute;
-  bottom: -80%;
-  left: 10%;
-  width: 200px;
-  height: 200px;
+  bottom: -120%;
+  left: 4%;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 60%);
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.12), transparent 62%);
   pointer-events: none;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   position: relative;
   z-index: 1;
 }
@@ -923,16 +969,18 @@ const handleSubmit = async () => {
 }
 
 .dialog-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  box-shadow:
+    0 10px 24px rgba(79, 70, 229, 0.18),
+    0 0 0 4px rgba(255, 255, 255, 0.86);
   position: relative;
   overflow: hidden;
   cursor: pointer;
@@ -940,8 +988,10 @@ const handleSubmit = async () => {
 }
 
 .dialog-avatar:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 30px rgba(79, 70, 229, 0.24),
+    0 0 0 4px rgba(255, 255, 255, 0.95);
 }
 
 .avatar-img {
@@ -957,7 +1007,7 @@ const handleSubmit = async () => {
 .avatar-upload-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.55);
+  background: rgba(17, 24, 39, 0.58);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -966,7 +1016,8 @@ const handleSubmit = async () => {
   opacity: 0;
   transition: opacity 0.2s ease;
   font-size: 11px;
-  backdrop-filter: blur(2px);
+  font-weight: 600;
+  backdrop-filter: blur(3px);
 }
 
 .dialog-avatar:hover .avatar-upload-overlay {
@@ -980,83 +1031,38 @@ const handleSubmit = async () => {
 .header-text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.dialog-title {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.dialog-tip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  opacity: 0.9;
-}
-
-.tip-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #fbbf24;
-  box-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
-  flex-shrink: 0;
-}
-
-.required-mark {
-  color: #fbbf24;
-  font-weight: 700;
-  margin: 0 2px;
-  font-size: 13px;
-}
-
-.header-right {
-  position: relative;
-  z-index: 1;
-  flex-shrink: 0;
-}
-
-.required-summary {
-  padding: 8px 14px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 9px;
-  border: 1px solid rgba(255,255,255,0.25);
-  backdrop-filter: blur(8px);
-  min-width: 180px;
-}
-
-.rs-title {
-  font-size: 12px;
-  font-weight: 500;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.rs-title em {
-  font-style: normal;
-  font-size: 16px;
-  font-weight: 700;
-  color: #86efac;
-  font-family: var(--font-mono);
-}
-
-.rs-fields {
-  display: flex;
-  flex-wrap: wrap;
   gap: 5px;
 }
 
-.rs-fields span {
-  font-size: 10.5px;
-  padding: 2px 7px;
-  background: rgba(255,255,255,0.18);
-  border-radius: 9px;
-  font-weight: 500;
+.dialog-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dialog-title {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.dialog-badge {
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(79, 70, 229, 0.14);
+}
+
+.dialog-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.35;
 }
 
 /* ========== Tabs ========== */
@@ -1157,6 +1163,9 @@ const handleSubmit = async () => {
 .emp-form :deep(.el-form-item__label) {
   font-size: 13px;
   color: var(--text-secondary);
+  white-space: nowrap;
+  line-height: 34px;
+  padding-right: 9px;
 }
 
 .emp-form :deep(.el-input__wrapper) {
@@ -1286,6 +1295,7 @@ const handleSubmit = async () => {
 
 .sub-form :deep(.el-form-item__label) {
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .sub-form :deep(.el-input__wrapper) {
@@ -1340,6 +1350,7 @@ const handleSubmit = async () => {
 
 .family-form :deep(.el-form-item__label) {
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .family-form :deep(.el-input__wrapper) {
@@ -1369,9 +1380,6 @@ const handleSubmit = async () => {
   .dialog-header {
     flex-direction: column;
     align-items: flex-start;
-  }
-  .header-right {
-    width: 100%;
   }
   .quick-tip {
     width: 100%;

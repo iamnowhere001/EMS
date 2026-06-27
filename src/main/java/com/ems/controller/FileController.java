@@ -12,6 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
@@ -59,15 +61,12 @@ public class FileController {
 
         String newFilename = UUID.randomUUID().toString().replace("-", "") + suffix;
         String subDir = getSubDir(type);
-        File dir = new File(uploadPath, subDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-
-        File dest = new File(dir, newFilename);
+        Path dir = getUploadRoot().resolve(subDir);
         try {
-            file.transferTo(dest);
-            validateImageContent(dest, suffix);
+            Files.createDirectories(dir);
+            Path dest = dir.resolve(newFilename).normalize();
+            file.transferTo(dest.toFile());
+            validateImageContent(dest.toFile(), suffix);
         } catch (IOException e) {
             throw new BusinessException(500, "文件上传失败: " + e.getMessage());
         }
@@ -108,6 +107,10 @@ public class FileController {
             case "certificate" -> "certificate";
             default -> throw new BusinessException(400, "不支持的文件类型: " + type);
         };
+    }
+
+    private Path getUploadRoot() {
+        return Paths.get(uploadPath).toAbsolutePath().normalize();
     }
 
     private void validateImageContent(File file, String suffix) throws IOException {

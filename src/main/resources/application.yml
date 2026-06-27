@@ -11,6 +11,11 @@ spring:
       max-file-size: 10MB
       max-request-size: 20MB
 
+file:
+  upload:
+    path: ${FILE_UPLOAD_PATH:uploads}
+    max-size: ${FILE_UPLOAD_MAX_SIZE:5242880}
+
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   type-aliases-package: com.ems.entity

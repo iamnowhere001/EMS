@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `employee` (
     `age` INT DEFAULT NULL COMMENT '年龄',
     `gender` TINYINT DEFAULT 0 COMMENT '性别：0-女，1-男',
     `phone` VARCHAR(20) DEFAULT NULL COMMENT '手机号',
-    `email` VARCHAR(50) DEFAULT NULL COMMENT '邮箱',
+    `email` VARCHAR(100) DEFAULT NULL COMMENT '邮箱',
     `id_card` VARCHAR(255) DEFAULT NULL COMMENT '身份证号（加密）',
     `id_card_hash` VARCHAR(64) DEFAULT NULL COMMENT '身份证号SHA256哈希（用于唯一性校验）',
     `bank_card` VARCHAR(255) DEFAULT NULL COMMENT '银行卡号（加密）',
@@ -35,9 +35,13 @@ CREATE TABLE IF NOT EXISTS `employee` (
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_employee_no` (`employee_no`),
-    KEY `idx_phone` (`phone`),
+    UNIQUE KEY `uk_phone` (`phone`),
     KEY `idx_name` (`name`),
-    KEY `idx_department` (`department`)
+    KEY `idx_department` (`department`),
+    KEY `idx_position` (`position`),
+    KEY `idx_rank` (`rank`),
+    KEY `idx_id_card_hash` (`id_card_hash`),
+    KEY `idx_bank_card_hash` (`bank_card_hash`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='员工信息表';
 
 -- Phase 1 档案补全：教育经历子表
@@ -232,6 +236,25 @@ CREATE TABLE IF NOT EXISTS `operation_log` (
     KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
 
+CREATE TABLE IF NOT EXISTS `sys_department` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `code` VARCHAR(50) DEFAULT NULL COMMENT '部门编码',
+  `name` VARCHAR(50) NOT NULL COMMENT '部门名称',
+  `parent_code` VARCHAR(50) DEFAULT NULL COMMENT '父部门编码',
+  `leader_id` BIGINT DEFAULT NULL COMMENT '负责人员工ID',
+  `leader_name` VARCHAR(50) DEFAULT NULL COMMENT '负责人姓名',
+  `sort` INT DEFAULT 0 COMMENT '排序',
+  `status` TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
+  `description` VARCHAR(255) DEFAULT NULL COMMENT '部门说明',
+  `employee_count` INT DEFAULT 0 COMMENT '部门人数快照字段，实际统计以员工表为准',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` TINYINT DEFAULT 0 COMMENT '逻辑删除：0-未删除，1-已删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_code` (`code`),
+  KEY `idx_parent_code` (`parent_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='部门表';
+
 CREATE TABLE IF NOT EXISTS `sys_dictionary` (
   `id` BIGINT NOT NULL AUTO_INCREMENT,
   `type` VARCHAR(50) NOT NULL COMMENT '字典类型：department/position',
@@ -327,6 +350,15 @@ CREATE TABLE IF NOT EXISTS `social_security_config` (
     UNIQUE KEY `uk_year_month` (`year_month`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='社保公积金配置表';
 
+INSERT INTO `sys_department` (`code`, `name`, `parent_code`, `sort`, `status`) VALUES
+('tech', '技术部', NULL, 1, 1),
+('product', '产品部', NULL, 2, 1),
+('design', '设计部', NULL, 3, 1),
+('operation', '运营部', NULL, 4, 1),
+('hr', '人事部', NULL, 5, 1),
+('finance', '财务部', NULL, 6, 1)
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `sort` = VALUES(`sort`), `status` = VALUES(`status`);
+
 INSERT INTO `sys_dictionary` (`type`, `code`, `name`, `sort`, `parent_code`) VALUES
 ('department', 'tech', '技术部', 1, NULL),
 ('department', 'product', '产品部', 2, NULL),
@@ -347,5 +379,4 @@ INSERT INTO `sys_dictionary` (`type`, `code`, `name`, `sort`, `parent_code`) VAL
 ('rank', 'P7', 'P7', 3, NULL),
 ('rank', 'P8', 'P8', 4, NULL)
 ON DUPLICATE KEY UPDATE `name` = `name`, `parent_code` = VALUES(`parent_code`);
-
 

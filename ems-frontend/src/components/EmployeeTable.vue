@@ -24,7 +24,9 @@
           <div class="employee-info-cell">
             <el-avatar
               :size="30"
-              :style="{ backgroundColor: getAvatarColor(row.name, row.gender) }"
+              :src="row.avatar || undefined"
+              fit="cover"
+              :style="{ backgroundColor: row.avatar ? 'transparent' : getAvatarColor(row.name, row.gender) }"
               class="employee-avatar"
             >
               {{ row.name?.slice(0, 1) }}

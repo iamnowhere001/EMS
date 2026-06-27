@@ -2,51 +2,55 @@
   <el-dialog
     v-model="dialogVisible"
     title="操作日志"
-    width="720px"
+    width="880px"
     align-center
     class="log-dialog"
     @open="handleOpen"
   >
-    <el-form :inline="true" :model="logQuery" class="log-search-form">
-      <el-form-item label="模块">
-        <el-select v-model="logQuery.module" placeholder="全部" clearable style="width: 120px">
-          <el-option label="员工管理" value="员工管理" />
-          <el-option label="字典管理" value="字典管理" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="操作类型">
-        <el-select v-model="logQuery.action" placeholder="全部" clearable style="width: 100px">
-          <el-option label="新增" value="新增" />
-          <el-option label="更新" value="更新" />
-          <el-option label="删除" value="删除" />
-          <el-option label="批量删除" value="批量删除" />
-          <el-option label="排序" value="排序" />
-          <el-option label="导入" value="导入" />
-          <el-option label="导出" value="导出" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="操作人">
-        <el-input v-model="logQuery.operator" placeholder="请输入操作人" clearable style="width: 120px" />
-      </el-form-item>
-      <el-form-item label="时间范围">
-        <el-date-picker
-          v-model="logQuery.startTime"
-          type="datetime"
-          placeholder="开始时间"
-          style="width: 160px"
-        />
-        <span class="date-separator">-</span>
-        <el-date-picker
-          v-model="logQuery.endTime"
-          type="datetime"
-          placeholder="结束时间"
-          style="width: 160px"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
-        <el-button :icon="RefreshRight" @click="handleReset">重置</el-button>
-      </el-form-item>
+    <el-form :model="logQuery" label-position="top" class="log-search-form">
+      <div class="filter-main">
+        <el-form-item label="模块" class="filter-item">
+          <el-select v-model="logQuery.module" placeholder="全部" clearable class="filter-control">
+            <el-option label="员工管理" value="员工管理" />
+            <el-option label="字典管理" value="字典管理" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="操作类型" class="filter-item">
+          <el-select v-model="logQuery.action" placeholder="全部" clearable class="filter-control">
+            <el-option label="新增" value="新增" />
+            <el-option label="更新" value="更新" />
+            <el-option label="删除" value="删除" />
+            <el-option label="批量删除" value="批量删除" />
+            <el-option label="排序" value="排序" />
+            <el-option label="导入" value="导入" />
+            <el-option label="导出" value="导出" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="操作人" class="filter-item">
+          <el-input v-model="logQuery.operator" placeholder="请输入操作人" clearable class="filter-control" />
+        </el-form-item>
+        <el-form-item label="时间范围" class="filter-item filter-date-item">
+          <div class="date-range-control">
+            <el-date-picker
+              v-model="logQuery.startTime"
+              type="datetime"
+              placeholder="开始时间"
+              class="filter-date"
+            />
+            <span class="date-separator">至</span>
+            <el-date-picker
+              v-model="logQuery.endTime"
+              type="datetime"
+              placeholder="结束时间"
+              class="filter-date"
+            />
+          </div>
+        </el-form-item>
+        <div class="filter-actions">
+          <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+          <el-button :icon="RefreshRight" @click="handleReset">重置</el-button>
+        </div>
+      </div>
     </el-form>
     <div v-loading="logLoading" class="log-timeline-wrapper">
       <el-timeline v-if="logData.length > 0">
@@ -252,19 +256,120 @@ const getLogIcon = (action?: string) => {
 
 <style scoped>
 .log-search-form {
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #ebeef5;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #e6ebf5;
+  border-radius: 12px;
+  background: #fbfcff;
 }
 
-.log-search-form .el-form-item {
+.filter-main {
+  display: grid;
+  grid-template-columns: 118px 128px 150px minmax(260px, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.log-search-form :deep(.el-form-item) {
   margin-bottom: 0;
-  margin-right: 8px;
+}
+
+.log-search-form :deep(.el-form-item__label) {
+  line-height: 18px;
+  margin-bottom: 5px;
+  padding: 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.log-search-form :deep(.el-form-item__content) {
+  width: 100%;
+  display: block;
+}
+
+.log-search-form :deep(.el-input__wrapper),
+.log-search-form :deep(.el-select__wrapper) {
+  min-height: 34px;
+  border-radius: 9px;
+  box-shadow: 0 0 0 1px #dfe5ef inset;
+}
+
+.log-search-form :deep(.el-input__wrapper:hover),
+.log-search-form :deep(.el-select__wrapper:hover) {
+  box-shadow: 0 0 0 1px #93c5fd inset;
+}
+
+.filter-item {
+  min-width: 0;
+}
+
+.filter-control {
+  width: 100%;
+}
+
+.date-range-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-date {
+  width: 100%;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 23px;
+  white-space: nowrap;
 }
 
 .date-separator {
-  margin: 0 6px;
-  color: #909399;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 920px) {
+  .filter-main {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .filter-date-item {
+    grid-column: span 2;
+  }
+
+  .filter-actions {
+    padding-top: 23px;
+  }
+}
+
+@media (max-width: 640px) {
+  .filter-main {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-date-item {
+    grid-column: auto;
+  }
+
+  .date-range-control {
+    grid-template-columns: 1fr;
+  }
+
+  .date-separator {
+    display: none;
+  }
+
+  .filter-actions {
+    padding-top: 0;
+  }
 }
 
 .log-timeline-wrapper {
