@@ -12,12 +12,12 @@
       </div>
       <div class="header-right">
         <template v-if="activeTab === 'salary'">
-          <el-button type="primary" :icon="MagicStick" @click="handleGenerate">生成工资</el-button>
-          <el-button type="warning" :disabled="!selectedIds.length" :icon="CircleCheck" @click="handleBatchConfirm">批量确认</el-button>
-          <el-button type="success" :disabled="!selectedIds.length" :icon="Wallet" @click="handleBatchPay">批量发放</el-button>
+          <el-button v-permission="'salary:manage'" type="primary" :icon="MagicStick" @click="handleGenerate">生成工资</el-button>
+          <el-button v-permission="'salary:confirm'" type="warning" :disabled="!selectedIds.length" :icon="CircleCheck" @click="handleBatchConfirm">批量确认</el-button>
+          <el-button v-permission="'salary:pay'" type="success" :disabled="!selectedIds.length" :icon="Wallet" @click="handleBatchPay">批量发放</el-button>
         </template>
         <template v-else>
-          <el-button type="primary" :icon="Edit" @click="handleEditSs">编辑配置</el-button>
+          <el-button v-permission="'salary:manage'" type="primary" :icon="Edit" @click="handleEditSs">编辑配置</el-button>
         </template>
       </div>
     </div>
@@ -58,7 +58,7 @@
           </div>
 
           <el-table :data="tableData" border v-loading="salaryLoading" class="salary-table" @selection-change="handleSelectionChange">
-            <el-table-column type="selection" width="55" />
+            <el-table-column v-if="hasPermission(['salary:confirm', 'salary:pay'])" type="selection" width="55" />
             <el-table-column prop="employeeId" label="员工" width="140">
               <template #default="{ row }">
                 <div class="employee-cell">
@@ -111,15 +111,15 @@
             </el-table-column>
             <el-table-column label="操作" width="140" fixed="right" align="center">
               <template #default="{ row }">
-                <el-button size="small" type="primary" link @click="handleEdit(row)">编辑</el-button>
-                <el-button v-if="row.status === 0" size="small" type="success" link @click="handleConfirm(row)">确认</el-button>
+                <el-button v-permission="'salary:manage'" size="small" type="primary" link @click="handleEdit(row)">编辑</el-button>
+                <el-button v-if="row.status === 0 && hasPermission('salary:confirm')" size="small" type="success" link @click="handleConfirm(row)">确认</el-button>
               </template>
             </el-table-column>
           </el-table>
 
           <div v-if="tableData.length === 0 && !salaryLoading" class="empty-state">
             <el-empty description="暂无薪资数据" :image-size="120">
-              <el-button type="primary" :icon="MagicStick" @click="handleGenerate">生成工资</el-button>
+              <el-button v-permission="'salary:manage'" type="primary" :icon="MagicStick" @click="handleGenerate">生成工资</el-button>
             </el-empty>
           </div>
 
@@ -420,6 +420,7 @@ import {
 import { salaryApi, type SalaryRecord } from '@/api/salary'
 import { employeeApi, type Employee } from '@/api/employee'
 import { socialSecurityApi, type SocialSecurityConfig } from '@/api/socialSecurity'
+import { hasPermission } from '@/utils/permission'
 
 const activeTab = ref('salary')
 const salaryLoading = ref(false)

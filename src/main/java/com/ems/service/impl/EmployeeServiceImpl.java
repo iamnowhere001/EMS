@@ -21,6 +21,7 @@ import com.ems.service.EmployeeFamilyService;
 import com.ems.service.EmployeeProbationService;
 import com.ems.service.EmployeeService;
 import com.ems.service.EmployeeWorkExperienceService;
+import com.ems.service.UserService;
 import com.ems.util.EmployeeChangeLogUtil;
 import com.ems.vo.EmployeeDetailVO;
 import com.ems.vo.EmployeeStatisticsVO;
@@ -57,6 +58,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
     private final EmployeeCertificateService certificateService;
     private final EmployeeContractService contractService;
     private final EmployeeProbationService probationService;
+    private final UserService userService;
 
     public EmployeeServiceImpl(EncryptionUtil encryptionUtil,
                                EmployeeEducationService educationService,
@@ -64,7 +66,8 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
                                EmployeeFamilyService familyService,
                                EmployeeCertificateService certificateService,
                                EmployeeContractService contractService,
-                               EmployeeProbationService probationService) {
+                               EmployeeProbationService probationService,
+                               UserService userService) {
         this.encryptionUtil = encryptionUtil;
         this.educationService = educationService;
         this.workExperienceService = workExperienceService;
@@ -72,6 +75,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         this.certificateService = certificateService;
         this.contractService = contractService;
         this.probationService = probationService;
+        this.userService = userService;
     }
 
     @PostConstruct
@@ -91,7 +95,11 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         validateIdCardUnique(employee.getIdCard(), null);
         validateBankCardUnique(employee.getBankCard(), null);
         encryptSensitiveData(employee);
-        return super.save(employee);
+        boolean success = super.save(employee);
+        if (success) {
+            userService.ensureDefaultEmployeeAccount(employee);
+        }
+        return success;
     }
 
     @Override
@@ -106,7 +114,11 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
             }
             encryptSensitiveData(employee);
         });
-        return super.saveBatch(entityList);
+        boolean success = super.saveBatch(entityList);
+        if (success) {
+            entityList.forEach(userService::ensureDefaultEmployeeAccount);
+        }
+        return success;
     }
 
     private String generateEmployeeNo() {

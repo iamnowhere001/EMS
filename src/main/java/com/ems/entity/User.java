@@ -18,6 +18,12 @@ public class User {
 
     private String nickname;
 
+    private Long employeeId;
+
+    private Integer deptDataScope;
+
+    private String remark;
+
     private String role;
 
     private Integer status;
@@ -56,6 +62,30 @@ public class User {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public Long getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
+    }
+
+    public Integer getDeptDataScope() {
+        return deptDataScope;
+    }
+
+    public void setDeptDataScope(Integer deptDataScope) {
+        this.deptDataScope = deptDataScope;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public String getRole() {

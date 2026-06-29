@@ -84,7 +84,9 @@
             </el-form-item>
           </el-form>
           <div class="login-tips">
-            默认账号：<span>admin</span> · 密码：<span>123456</span>
+            员工账号：<span>安之</span> · 密码：<span>123456</span>
+            <br />
+            管理账号：<span>superadmin</span> / <span>hradmin</span> / <span>deptmanager</span>
           </div>
         </div>
       </div>
@@ -101,6 +103,7 @@ import { ElMessage } from 'element-plus'
 import { Management, User, Lock, Check, ArrowRight } from '@element-plus/icons-vue'
 import { authApi } from '@/api/auth'
 import { STORAGE_KEYS } from '@/utils/constants'
+import { loadUserState } from '@/utils/permission'
 
 const router = useRouter()
 const formRef = ref<any>(null)
@@ -114,7 +117,7 @@ const features = [
 ]
 
 const form = reactive({
-  username: 'admin',
+  username: '安之',
   password: '123456',
 })
 
@@ -133,6 +136,7 @@ const handleLogin = async () => {
     localStorage.setItem(STORAGE_KEYS.TOKEN, userInfo.token)
     localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, userInfo.refreshToken || '')
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userInfo))
+    loadUserState()
     ElMessage.success('登录成功')
     router.push('/')
   } catch (error: any) {

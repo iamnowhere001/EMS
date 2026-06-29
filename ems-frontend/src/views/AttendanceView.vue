@@ -20,7 +20,7 @@
         <div class="checkin-right">
           <div class="checkin-actions">
             <div class="checkin-btn-wrap in">
-              <div class="checkin-btn" :class="{ done: todayStatus.checkedIn }" @click="handleCheckIn">
+              <div v-permission="'attendance:checkin'" class="checkin-btn" :class="{ done: todayStatus.checkedIn }" @click="handleCheckIn">
                 <div class="btn-icon">
                   <el-icon><Sunrise /></el-icon>
                 </div>
@@ -42,7 +42,7 @@
               <div class="divider-line"></div>
             </div>
             <div class="checkin-btn-wrap out">
-              <div class="checkin-btn" :class="{ done: todayStatus.checkedOut }" @click="handleCheckOut">
+              <div v-permission="'attendance:checkin'" class="checkin-btn" :class="{ done: todayStatus.checkedOut }" @click="handleCheckOut">
                 <div class="btn-icon">
                   <el-icon><Sunset /></el-icon>
                 </div>
@@ -116,10 +116,10 @@
       <div class="section-header">
         <div class="section-title">
           <span class="title-dot"></span>
-          考勤记录
+          {{ canSelectEmployee ? '考勤记录' : '我的考勤记录' }}
         </div>
         <div class="section-filters">
-          <el-select v-model="searchForm.employeeId" placeholder="选择员工" clearable filterable size="default" class="filter-select">
+          <el-select v-if="canSelectEmployee" v-model="searchForm.employeeId" placeholder="选择员工" clearable filterable size="default" class="filter-select">
             <el-option v-for="emp in employees" :key="emp.id" :label="emp.name" :value="emp.id" />
           </el-select>
           <el-date-picker v-model="searchForm.yearMonth" type="month" placeholder="选择月份" format="YYYY-MM" value-format="YYYY-MM" size="default" class="filter-select" />
@@ -189,10 +189,10 @@
             <span v-else class="remark-empty">-</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="130" fixed="right" align="center">
+        <el-table-column v-if="hasPermission('attendance:manage')" label="操作" width="130" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button size="small" type="primary" link @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" type="danger" link @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'attendance:manage'" size="small" type="primary" link @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'attendance:manage'" size="small" type="danger" link @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -265,6 +265,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Clock, Search, RefreshRight, Sunrise, Sunset, DataAnalysis, CircleCheck, ArrowRight } from '@element-plus/icons-vue'
 import { attendanceApi, type Attendance } from '@/api/attendance'
 import { employeeApi, type Employee } from '@/api/employee'
+import { hasPermission } from '@/utils/permission'
+import { getCurrentUser } from '@/utils/auth'
 
 const loading = ref(false)
 const tableData = ref<Attendance[]>([])
@@ -272,6 +274,9 @@ const employees = ref<Employee[]>([])
 const dialogVisible = ref(false)
 const currentTime = ref('')
 let timer: number | null = null
+const currentUser = getCurrentUser()
+const currentEmployeeId = computed(() => currentUser?.employeeId || 0)
+const canSelectEmployee = computed(() => hasPermission('employee:view'))
 
 const searchForm = reactive({
   employeeId: undefined as number | undefined,
@@ -344,6 +349,9 @@ const updateTime = () => {
 const loadData = async () => {
   loading.value = true
   try {
+    if (!canSelectEmployee.value) {
+      searchForm.employeeId = currentEmployeeId.value || undefined
+    }
     const res = await attendanceApi.page({
       employeeId: searchForm.employeeId,
       yearMonth: searchForm.yearMonth,
@@ -379,12 +387,21 @@ const calculateStats = (records: Attendance[]) => {
 }
 
 const loadEmployees = async () => {
-  const res = await employeeApi.list()
-  employees.value = res
+  if (canSelectEmployee.value) {
+    const res = await employeeApi.list()
+    employees.value = res
+    return
+  }
+  try {
+    const emp = await employeeApi.me()
+    employees.value = emp ? [emp] : []
+  } catch {
+    employees.value = []
+  }
 }
 
 const resetSearch = () => {
-  searchForm.employeeId = undefined
+  searchForm.employeeId = canSelectEmployee.value ? undefined : currentEmployeeId.value || undefined
   searchForm.yearMonth = ''
   searchForm.status = undefined
   pagination.page = 1
@@ -392,12 +409,13 @@ const resetSearch = () => {
 }
 
 const handleCheckIn = async () => {
-  if (!searchForm.employeeId) {
-    ElMessage.warning('请先选择员工')
+  const employeeId = canSelectEmployee.value ? searchForm.employeeId : currentEmployeeId.value
+  if (!employeeId) {
+    ElMessage.warning('当前账号未绑定员工档案')
     return
   }
   try {
-    await attendanceApi.checkIn(searchForm.employeeId)
+    await attendanceApi.checkIn(employeeId)
     ElMessage.success('签到成功')
     todayStatus.checkedIn = true
     const now = new Date()
@@ -409,12 +427,13 @@ const handleCheckIn = async () => {
 }
 
 const handleCheckOut = async () => {
-  if (!searchForm.employeeId) {
-    ElMessage.warning('请先选择员工')
+  const employeeId = canSelectEmployee.value ? searchForm.employeeId : currentEmployeeId.value
+  if (!employeeId) {
+    ElMessage.warning('当前账号未绑定员工档案')
     return
   }
   try {
-    await attendanceApi.checkOut(searchForm.employeeId)
+    await attendanceApi.checkOut(employeeId)
     ElMessage.success('签退成功')
     todayStatus.checkedOut = true
     const now = new Date()
@@ -475,6 +494,9 @@ const formatTime = (timeStr: string) => {
 onMounted(() => {
   updateTime()
   timer = window.setInterval(updateTime, 1000)
+  if (!canSelectEmployee.value) {
+    searchForm.employeeId = currentEmployeeId.value || undefined
+  }
   loadEmployees()
   loadData()
 })
@@ -491,15 +513,15 @@ onUnmounted(() => {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 18px 20px 24px;
+  gap: 14px;
+  padding: 16px 20px 22px;
 }
 
 /* ========== 顶部区域 ========== */
 .top-section {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
-  gap: 16px;
+  gap: 14px;
   flex-shrink: 0;
 }
 
@@ -507,12 +529,12 @@ onUnmounted(() => {
 .checkin-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 16px;
-  padding: 22px 28px;
+  padding: 18px 24px;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 18px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 8px 24px -8px rgba(99, 102, 241, 0.45);
@@ -543,7 +565,7 @@ onUnmounted(() => {
 .checkin-left {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
   position: relative;
   z-index: 1;
 }
@@ -555,7 +577,7 @@ onUnmounted(() => {
 }
 
 .date-day {
-  font-size: 44px;
+  font-size: 40px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -587,7 +609,7 @@ onUnmounted(() => {
 }
 
 .clock-time {
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1;
@@ -605,7 +627,7 @@ onUnmounted(() => {
 .checkin-right {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   position: relative;
   z-index: 1;
 }
@@ -613,7 +635,7 @@ onUnmounted(() => {
 .checkin-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .checkin-btn-wrap {
@@ -624,11 +646,11 @@ onUnmounted(() => {
 }
 
 .checkin-btn {
-  width: 110px;
+  width: 102px;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 12px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -655,14 +677,14 @@ onUnmounted(() => {
 }
 
 .btn-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .checkin-btn.done .btn-icon {
@@ -772,10 +794,10 @@ onUnmounted(() => {
   background: var(--bg-elevated);
   border-radius: 16px;
   border: 1px solid var(--border-subtle);
-  padding: 18px 20px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   box-shadow: var(--shadow-sm);
   transition: box-shadow 0.3s var(--ease-out);
 }
@@ -900,10 +922,10 @@ onUnmounted(() => {
   background: var(--bg-elevated);
   border-radius: 14px;
   border: 1px solid var(--border-subtle);
-  padding: 16px 20px;
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   min-height: 0;
   box-shadow: var(--shadow-sm);
 }

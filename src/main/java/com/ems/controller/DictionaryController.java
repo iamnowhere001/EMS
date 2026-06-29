@@ -1,6 +1,6 @@
 package com.ems.controller;
 
-import com.ems.common.RequireRole;
+import com.ems.common.RequiresPermission;
 import com.ems.common.Result;
 import com.ems.config.CacheConfig;
 import com.ems.entity.Dictionary;
@@ -32,7 +32,7 @@ public class DictionaryController {
     }
 
     @PostMapping
-    @RequireRole("admin")
+    @RequiresPermission("system:manage")
     @CacheEvict(value = CacheConfig.CACHE_DICTIONARY, allEntries = true)
     public Result<Void> save(@RequestBody Dictionary dictionary) {
         boolean success = dictionaryService.save(dictionary);
@@ -40,7 +40,7 @@ public class DictionaryController {
     }
 
     @PutMapping("/{id}")
-    @RequireRole("admin")
+    @RequiresPermission("system:manage")
     @CacheEvict(value = CacheConfig.CACHE_DICTIONARY, allEntries = true)
     public Result<Void> update(@PathVariable Long id, @RequestBody Dictionary dictionary) {
         dictionary.setId(id);
@@ -49,7 +49,7 @@ public class DictionaryController {
     }
 
     @DeleteMapping("/{id}")
-    @RequireRole("admin")
+    @RequiresPermission("system:manage")
     public Result<Void> delete(@PathVariable Long id) {
         boolean success = dictionaryService.removeById(id);
         return success ? Result.success() : Result.error("删除失败");

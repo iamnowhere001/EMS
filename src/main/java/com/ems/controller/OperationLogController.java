@@ -1,6 +1,7 @@
 package com.ems.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.ems.common.RequiresPermission;
 import com.ems.common.Result;
 import com.ems.entity.OperationLog;
 import com.ems.service.OperationLogService;
@@ -22,6 +23,7 @@ public class OperationLogController {
     }
 
     @GetMapping("/page")
+    @RequiresPermission("system:log")
     public Result<IPage<OperationLog>> page(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,

@@ -22,6 +22,10 @@ import {
 } from 'echarts/components'
 import VChart, { THEME_KEY } from 'vue-echarts'
 
+// 权限指令
+import permissionDirective from './directives/permission'
+import { hasPermission, isAdmin } from './utils/permission'
+
 use([
   CanvasRenderer,
   BarChart,
@@ -47,5 +51,12 @@ app.use(router)
 app.use(ElementPlus, { locale: zhCn })
 app.component('VChart', VChart)
 app.provide(THEME_KEY, 'light')
+
+// 注册权限指令
+app.directive('permission', permissionDirective)
+
+// 全局属性：模板中可用 $hasPermission('employee:create') 判断
+app.config.globalProperties.$hasPermission = hasPermission
+app.config.globalProperties.$isAdmin = isAdmin
 
 app.mount('#app')

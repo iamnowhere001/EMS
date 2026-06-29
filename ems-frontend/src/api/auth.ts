@@ -9,7 +9,9 @@ export interface UserInfo {
   id: number
   username: string
   nickname: string
+  employeeId?: number
   role: string
+  permissions: string[]
   token: string
   refreshToken?: string
 }

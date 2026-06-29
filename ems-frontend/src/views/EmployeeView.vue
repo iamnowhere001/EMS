@@ -31,7 +31,7 @@
           </div>
         </div>
       </el-col>
-      <el-col :span="6">
+      <el-col v-if="hasPermission('salary:view')" :span="6">
         <div class="stat-card danger stat-anim" style="animation-delay: 240ms">
           <div class="stat-glow"></div>
           <div class="stat-icon"><el-icon><Money /></el-icon></div>
@@ -52,10 +52,10 @@
             :icon="UserFilled"
           />
           <div class="header-actions">
-            <el-button size="large" :icon="List" @click="logDialogVisible = true">操作日志</el-button>
-            <el-button type="success" size="large" :icon="Upload" @click="handleImport">导入</el-button>
-            <el-button type="warning" size="large" :icon="Download" @click="handleExport">导出</el-button>
-            <el-button type="primary" size="large" :icon="Plus" @click="handleAdd">新增员工</el-button>
+            <el-button v-permission="'system:log'" size="large" :icon="List" @click="logDialogVisible = true">操作日志</el-button>
+            <el-button v-permission="'employee:import'" type="success" size="large" :icon="Upload" @click="handleImport">导入</el-button>
+            <el-button v-permission="'employee:export'" type="warning" size="large" :icon="Download" @click="handleExport">导出</el-button>
+            <el-button v-permission="'employee:create'" type="primary" size="large" :icon="Plus" @click="handleAdd">新增员工</el-button>
           </div>
         </div>
       </template>
@@ -159,7 +159,7 @@
 
       <div class="toolbar">
         <el-button
-          v-if="isAdmin()"
+          v-if="hasPermission('employee:edit')"
           type="warning"
           :disabled="selectedIds.length === 0"
           :icon="Refresh"
@@ -168,7 +168,7 @@
           批量调岗
         </el-button>
         <el-button
-          v-if="isAdmin()"
+          v-if="hasPermission('salary:manage')"
           type="success"
           :disabled="selectedIds.length === 0"
           :icon="Money"
@@ -177,7 +177,7 @@
           批量调薪
         </el-button>
         <el-button
-          v-if="isAdmin()"
+          v-if="hasPermission('employee:delete')"
           type="danger"
           :disabled="selectedIds.length === 0"
           :icon="Delete"
@@ -217,7 +217,7 @@
 
       <div v-if="tableData.length === 0 && !loading" class="empty-state">
         <el-empty description="暂无员工数据" :image-size="120">
-          <el-button type="primary" :icon="Plus" @click="handleAdd">新增员工</el-button>
+          <el-button v-permission="'employee:create'" type="primary" :icon="Plus" @click="handleAdd">新增员工</el-button>
         </el-empty>
       </div>
 
@@ -322,7 +322,7 @@ import OperationLogDialog from '@/components/OperationLogDialog.vue'
 import BatchTransferDialog from '@/components/BatchTransferDialog.vue'
 import BatchSalaryDialog from '@/components/BatchSalaryDialog.vue'
 import WorkflowDialog from '@/components/WorkflowDialog.vue'
-import { isAdmin } from '@/utils/auth'
+import { hasPermission } from '@/utils/permission'
 import { formatSalary } from '@/utils/common'
 
 const loading = ref(false)

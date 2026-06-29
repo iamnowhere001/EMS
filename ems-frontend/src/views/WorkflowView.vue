@@ -70,7 +70,7 @@
         </el-table-column>
         <el-table-column label="操作" width="100" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button v-if="isAdmin() && row.status === 1" type="danger" link :icon="RefreshLeft" @click="handleRevoke(row)">撤销</el-button>
+            <el-button v-if="canManageWorkflow && row.status === 1" type="danger" link :icon="RefreshLeft" @click="handleRevoke(row)">撤销</el-button>
             <el-tag v-else-if="row.status === 0" type="info" size="small" effect="plain">已撤销</el-tag>
           </template>
         </el-table-column>
@@ -100,11 +100,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Document, Search, RefreshRight, RefreshLeft } from '@element-plus/icons-vue'
 import { workflowApi, type WorkflowChange } from '@/api/workflow'
-import { isAdmin } from '@/utils/auth'
+import { hasPermission } from '@/utils/permission'
 import PageHeader from '@/components/PageHeader.vue'
 import { formatDate } from '@/utils'
 
@@ -113,6 +113,7 @@ const query = reactive({ keyword: '', page: 1, size: 10 })
 const tableData = ref<WorkflowChange[]>([])
 const total = ref(0)
 const loading = ref(false)
+const canManageWorkflow = computed(() => hasPermission(['workflow:manage', 'employee:edit', 'salary:manage']))
 
 const typeLabel = (t?: string) => {
   switch (t) {

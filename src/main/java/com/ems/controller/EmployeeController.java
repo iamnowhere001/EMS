@@ -1,14 +1,18 @@
 package com.ems.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.ems.common.RequireRole;
+import com.ems.common.AuthContext;
+import com.ems.common.BusinessException;
+import com.ems.common.RequiresPermission;
 import com.ems.common.Result;
-import com.ems.common.RoleConstants;
-import com.ems.dto.BatchOperationDTO;
+import com.ems.dto.BatchOperationDTO.AdjustSalary;
+import com.ems.dto.BatchOperationDTO.Transfer;
 import com.ems.dto.EmployeeFormDTO;
 import com.ems.entity.Employee;
+import com.ems.entity.User;
 import com.ems.service.EmployeeService;
 import com.ems.service.OperationLogService;
+import com.ems.service.UserService;
 import com.ems.util.EmployeeChangeLogUtil;
 import com.ems.vo.EmployeeDetailVO;
 import com.ems.vo.EmployeeStatisticsVO;
@@ -26,13 +30,16 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
     private final OperationLogService operationLogService;
+    private final UserService userService;
 
-    public EmployeeController(EmployeeService employeeService, OperationLogService operationLogService) {
+    public EmployeeController(EmployeeService employeeService, OperationLogService operationLogService, UserService userService) {
         this.employeeService = employeeService;
         this.operationLogService = operationLogService;
+        this.userService = userService;
     }
 
     @PostMapping
+    @RequiresPermission("employee:create")
     public Result<Void> save(@RequestBody @Valid EmployeeFormDTO form) {
         Employee employee = form.getEmployee();
         boolean success = employeeService.addEmployee(form);
@@ -43,6 +50,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
+    @RequiresPermission("employee:edit")
     public Result<Void> update(@PathVariable Long id, @RequestBody @Valid EmployeeFormDTO form) {
         Employee oldEmployee = employeeService.getById(id);
         Employee employee = form.getEmployee();
@@ -64,7 +72,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
-    @RequireRole(RoleConstants.ADMIN)
+    @RequiresPermission("employee:delete")
     public Result<Void> delete(@PathVariable Long id) {
         Employee employee = employeeService.getById(id);
         boolean success = employeeService.deleteEmployee(id);
@@ -75,7 +83,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/batch")
-    @RequireRole(RoleConstants.ADMIN)
+    @RequiresPermission("employee:delete")
     public Result<Void> deleteBatch(@RequestParam List<Long> ids) {
         boolean success = employeeService.deleteEmployees(ids);
         if (success) {
@@ -85,8 +93,8 @@ public class EmployeeController {
     }
 
     @PostMapping("/batch/transfer")
-    @RequireRole(RoleConstants.ADMIN)
-    public Result<Integer> batchTransfer(@RequestBody @Valid BatchOperationDTO.Transfer dto) {
+    @RequiresPermission("employee:edit")
+    public Result<Integer> batchTransfer(@RequestBody @Valid Transfer dto) {
         int count = employeeService.batchTransfer(dto.getIds(), dto.getDepartment(), dto.getPosition());
         operationLogService.log("员工管理", "批量调岗",
                 "批量调岗至 [" + dto.getDepartment() + " · " + dto.getPosition() + "]，共 " + count + " 人");
@@ -94,8 +102,8 @@ public class EmployeeController {
     }
 
     @PostMapping("/batch/adjust-salary")
-    @RequireRole(RoleConstants.ADMIN)
-    public Result<Integer> batchAdjustSalary(@RequestBody @Valid BatchOperationDTO.AdjustSalary dto) {
+    @RequiresPermission("salary:manage")
+    public Result<Integer> batchAdjustSalary(@RequestBody @Valid AdjustSalary dto) {
         int count = employeeService.batchAdjustSalary(dto.getIds(), dto.getMode(), dto.getAmount());
         String modeDesc;
         switch (dto.getMode()) {
@@ -110,18 +118,50 @@ public class EmployeeController {
     }
 
     @GetMapping("/{id}")
+    @RequiresPermission("employee:detail")
     public Result<Employee> getById(@PathVariable Long id) {
         Employee employee = employeeService.getById(id);
         employeeService.decryptSensitiveData(employee);
         return Result.success(employee);
     }
 
+    @GetMapping("/me")
+    @RequiresPermission("personal:view")
+    public Result<Employee> getMyProfile() {
+        Employee employee = employeeService.getById(resolveCurrentEmployeeId());
+        employeeService.decryptSensitiveData(employee);
+        return Result.success(employee);
+    }
+
+    @PutMapping("/me")
+    @RequiresPermission("personal:view")
+    public Result<Void> updateMyProfile(@RequestBody EmployeeFormDTO form) {
+        Long employeeId = resolveCurrentEmployeeId();
+        Employee existing = employeeService.getById(employeeId);
+        Employee employee = form.getEmployee();
+        if (existing == null || employee == null) {
+            return Result.error("参数错误");
+        }
+        existing.setPhone(employee.getPhone());
+        existing.setEmail(employee.getEmail());
+        existing.setEmergencyContact(employee.getEmergencyContact());
+        existing.setEmergencyPhone(employee.getEmergencyPhone());
+        existing.setCurrentAddress(employee.getCurrentAddress());
+        boolean success = employeeService.updateById(existing);
+        if (success) {
+            operationLogService.log("个人中心", "更新资料", "员工更新个人联系资料：" + existing.getName());
+        }
+        return success ? Result.success() : Result.error("更新失败");
+    }
+
     @GetMapping("/{id}/detail")
+    @RequiresPermission("employee:detail")
     public Result<EmployeeDetailVO> getDetail(@PathVariable Long id) {
         return Result.success(employeeService.getDetail(id));
     }
 
     @GetMapping("/list")
+    @RequiresPermission("employee:view")
     public Result<List<Employee>> list() {
         List<Employee> list = employeeService.list();
         employeeService.decryptSensitiveData(list);
@@ -129,6 +169,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/page")
+    @RequiresPermission("employee:view")
     public Result<IPage<Employee>> page(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String employeeNo,
@@ -144,6 +185,7 @@ public class EmployeeController {
     }
 
     @PostMapping("/sort")
+    @RequiresPermission("employee:edit")
     public Result<Void> sort(@RequestBody List<Long> ids) {
         employeeService.updateSortOrder(ids);
         operationLogService.log("员工管理", "排序", "调整员工排序顺序，数量：" + ids.size());
@@ -151,25 +193,37 @@ public class EmployeeController {
     }
 
     @GetMapping("/statistics")
+    @RequiresPermission("employee:view")
     public Result<EmployeeStatisticsVO> statistics() {
         return Result.success(employeeService.statistics());
     }
 
     @GetMapping("/reminders")
+    @RequiresPermission("employee:view")
     public Result<com.ems.vo.ReminderVO> reminders() {
         return Result.success(employeeService.reminders());
     }
 
     @GetMapping("/export")
+    @RequiresPermission("employee:export")
     public void exportExcel(HttpServletResponse response) throws IOException {
         employeeService.exportExcel(response);
         operationLogService.log("员工管理", "导出", "导出员工信息");
     }
 
     @PostMapping("/import")
+    @RequiresPermission("employee:import")
     public Result<Void> importExcel(@RequestParam("file") MultipartFile file) throws IOException {
         employeeService.importExcel(file);
         operationLogService.log("员工管理", "导入", "导入员工信息");
         return Result.success();
+    }
+
+    private Long resolveCurrentEmployeeId() {
+        User user = userService.getById(AuthContext.getUserId());
+        if (user == null || user.getEmployeeId() == null) {
+            throw new BusinessException(400, "当前账号未绑定员工档案");
+        }
+        return user.getEmployeeId();
     }
 }

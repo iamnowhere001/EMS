@@ -12,12 +12,12 @@
       @header-dragend="handleHeaderDragend"
       @sort-change="handleSortChange"
     >
-      <el-table-column v-if="columnVisible.drag" column-key="drag" label="" :width="columnWidth.drag" align="center" class-name="drag-handle">
+      <el-table-column v-if="columnVisible.drag && hasPermission('employee:edit')" column-key="drag" label="" :width="columnWidth.drag" align="center" class-name="drag-handle">
         <template #default>
           <el-icon class="drag-icon"><Rank /></el-icon>
         </template>
       </el-table-column>
-      <el-table-column v-if="columnVisible.selection" column-key="selection" type="selection" :width="columnWidth.selection" align="center" />
+      <el-table-column v-if="columnVisible.selection && hasPermission(['employee:delete', 'employee:edit', 'salary:manage'])" column-key="selection" type="selection" :width="columnWidth.selection" align="center" />
       <el-table-column v-if="columnVisible.index" column-key="index" type="index" label="#" :width="columnWidth.index" align="center" />
       <el-table-column v-if="columnVisible.info" column-key="info" prop="name" label="员工信息" :min-width="columnWidth.info || 180" align="left">
         <template #default="{ row }">
@@ -93,7 +93,7 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column v-if="columnVisible.salary" column-key="salary" prop="salary" label="薪资" :width="columnWidth.salary" align="right" sortable="custom">
+      <el-table-column v-if="columnVisible.salary && hasPermission('salary:view')" column-key="salary" prop="salary" label="薪资" :width="columnWidth.salary" align="right" sortable="custom">
         <template #default="{ row }">
           <span class="salary">{{ row.salary || row.salary === 0 ? '¥ ' + formatSalary(row.salary) : '-' }}</span>
         </template>
@@ -131,29 +131,29 @@
             <el-tooltip content="查看详情" placement="top">
               <el-button link type="primary" :icon="View" @click="$emit('view', row)">查看</el-button>
             </el-tooltip>
-            <el-tooltip content="编辑" placement="top">
+            <el-tooltip v-if="hasPermission('employee:edit')" content="编辑" placement="top">
               <el-button link type="primary" :icon="Edit" @click="$emit('edit', row)">编辑</el-button>
             </el-tooltip>
-            <el-dropdown v-if="isAdmin() && row.status === 1" trigger="click" size="small" @command="(c: string) => $emit('workflow', { type: c, employee: row })">
+            <el-dropdown v-if="hasPermission(['employee:edit', 'salary:manage']) && row.status === 1" trigger="click" size="small" @command="(c: string) => $emit('workflow', { type: c, employee: row })">
               <el-button link type="warning" :icon="More">更多</el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="TRANSFER">
+                  <el-dropdown-item v-if="hasPermission('employee:edit')" command="TRANSFER">
                     <el-icon><Refresh /></el-icon> 调岗
                   </el-dropdown-item>
-                  <el-dropdown-item command="ADJUST_SALARY">
+                  <el-dropdown-item v-if="hasPermission('salary:manage')" command="ADJUST_SALARY">
                     <el-icon><Money /></el-icon> 调薪
                   </el-dropdown-item>
-                  <el-dropdown-item command="CONFIRM">
+                  <el-dropdown-item v-if="hasPermission('employee:edit')" command="CONFIRM">
                     <el-icon><CircleCheckFilled /></el-icon> 转正
                   </el-dropdown-item>
-                  <el-dropdown-item command="LEAVE" divided>
+                  <el-dropdown-item v-if="hasPermission('employee:edit')" command="LEAVE" divided>
                     <el-icon><SwitchButton /></el-icon> 离职
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
-            <el-tooltip v-else-if="isAdmin()" content="删除" placement="top">
+            <el-tooltip v-if="hasPermission('employee:delete')" content="删除" placement="top">
               <el-button link type="danger" :icon="Delete" @click="$emit('delete', row)" />
             </el-tooltip>
           </div>
@@ -184,7 +184,7 @@ import {
 import { type Employee } from '@/api/employee'
 import { type Dictionary } from '@/api/dictionary'
 import { vResizeColumn } from '@/directives/resizeColumn'
-import { isAdmin } from '@/utils/auth'
+import { hasPermission } from '@/utils/permission'
 import { columnLabelMap, columnVisible, columnWidth, saveColumnVisible, saveColumnWidth, loadColumnSettings, isHighlighted, highlightRow } from '@/utils/tableConfig'
 import { getAvatarColor, formatSalary, formatEmpty, formatWorkYears, formatDate, desensitizePhone, desensitizeEmail } from '@/utils/common'
 

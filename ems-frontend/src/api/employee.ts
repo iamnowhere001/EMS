@@ -167,6 +167,12 @@ export const employeeApi = {
   getById(id: number) {
     return request.get<any, Employee>(`/employee/${id}`)
   },
+  me() {
+    return request.get<any, Employee>('/employee/me')
+  },
+  updateMe(data: EmployeeFormPayload) {
+    return request.put<any, void>('/employee/me', data)
+  },
   getDetail(id: number) {
     return request.get<any, EmployeeDetailVO>(`/employee/${id}/detail`)
   },

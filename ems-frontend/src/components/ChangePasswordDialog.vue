@@ -35,6 +35,7 @@ import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { Lock, Key, Check } from '@element-plus/icons-vue'
 import { userApi } from '@/api/user'
 import { useRouter } from 'vue-router'
+import { clearUserState } from '@/utils/permission'
 
 const props = defineProps<{ visible: boolean }>()
 const emit = defineEmits<{ (e: 'update:visible', val: boolean): void }>()
@@ -117,6 +118,7 @@ const handleSubmit = async () => {
       localStorage.removeItem('ems_token')
       localStorage.removeItem('ems_refresh_token')
       localStorage.removeItem('ems_user')
+      clearUserState()
       router.push('/login')
     }, 800)
   } catch (error: any) {

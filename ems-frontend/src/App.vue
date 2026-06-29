@@ -26,43 +26,63 @@
           @select="handleMenuSelect"
         >
           <div class="menu-group" v-show="!isCollapsed">
-            <span class="menu-group-title">工作台</span>
+            <span class="menu-group-title">{{ isEmployeeRole ? '我的工作台' : '工作台' }}</span>
           </div>
-          <el-menu-item index="/dashboard">
+          <el-menu-item v-if="$hasPermission('menu:personal')" index="/personal">
+            <el-icon><HomeFilled /></el-icon>
+            <template #title>个人中心</template>
+          </el-menu-item>
+          <el-menu-item v-if="$hasPermission(['menu:dashboard', 'dashboard:view'])" index="/dashboard">
             <el-icon><DataLine /></el-icon>
             <template #title>数据看板</template>
           </el-menu-item>
-          <el-menu-item index="/employee">
+          <el-menu-item v-if="$hasPermission('menu:employee')" index="/employee">
             <el-icon><UserFilled /></el-icon>
             <template #title>员工管理</template>
           </el-menu-item>
-          <el-menu-item index="/organization">
+          <el-menu-item v-if="$hasPermission('menu:organization')" index="/organization">
             <el-icon><OfficeBuilding /></el-icon>
             <template #title>组织设置</template>
           </el-menu-item>
 
-          <div class="menu-group" v-show="!isCollapsed">
-            <span class="menu-group-title">人事考勤</span>
+          <div class="menu-group" v-if="canShowWorkflowGroup" v-show="!isCollapsed">
+            <span class="menu-group-title">人事事务</span>
           </div>
-          <el-menu-item index="/attendance">
-            <el-icon><Clock /></el-icon>
-            <template #title>考勤管理</template>
+          <el-menu-item v-if="$hasPermission(['menu:workflow', 'workflow:view', 'employee:edit', 'salary:manage'])" index="/workflow">
+            <el-icon><Document /></el-icon>
+            <template #title>流程管理</template>
           </el-menu-item>
 
-          <div class="menu-group" v-show="!isCollapsed">
+          <div class="menu-group" v-if="canShowHrGroup" v-show="!isCollapsed">
+            <span class="menu-group-title">{{ isEmployeeRole ? '自助服务' : '人事考勤' }}</span>
+          </div>
+          <el-menu-item v-if="$hasPermission('menu:attendance')" index="/attendance">
+            <el-icon><Clock /></el-icon>
+            <template #title>{{ isEmployeeRole ? '考勤打卡' : '考勤管理' }}</template>
+          </el-menu-item>
+          <el-menu-item v-if="$hasPermission('menu:leave')" index="/leave">
+            <el-icon><Document /></el-icon>
+            <template #title>{{ isEmployeeRole ? '请假申请' : '请假管理' }}</template>
+          </el-menu-item>
+
+          <div class="menu-group" v-if="canShowSalaryGroup" v-show="!isCollapsed">
             <span class="menu-group-title">薪酬福利</span>
           </div>
-          <el-menu-item index="/salary">
+          <el-menu-item v-if="$hasPermission('menu:salary')" index="/salary">
             <el-icon><Money /></el-icon>
             <template #title>薪资社保</template>
           </el-menu-item>
 
-          <div class="menu-group" v-show="!isCollapsed">
+          <div class="menu-group" v-if="canShowSystemGroup" v-show="!isCollapsed">
             <span class="menu-group-title">系统管理</span>
           </div>
-          <el-menu-item v-if="isAdmin()" index="/system">
+          <el-menu-item v-if="$hasPermission('menu:system')" index="/system">
             <el-icon><Setting /></el-icon>
             <template #title>系统设置</template>
+          </el-menu-item>
+          <el-menu-item v-if="$hasPermission('system:role')" index="/role-manage">
+            <el-icon><Management /></el-icon>
+            <template #title>角色管理</template>
           </el-menu-item>
         </el-menu>
 
@@ -109,7 +129,7 @@
                 <el-avatar :size="34" :icon="UserFilled" class="user-avatar" />
                 <div class="user-info">
                   <div class="user-name">{{ userInfo?.nickname || userInfo?.username || '管理员' }}</div>
-                  <div class="user-role">{{ userInfo?.role === 'ADMIN' ? '系统管理员' : '普通用户' }}</div>
+                  <div class="user-role">{{ formatRole(userInfo?.role) }}</div>
                 </div>
                 <el-icon class="arrow-icon"><ArrowDown /></el-icon>
               </div>
@@ -130,7 +150,7 @@
         <el-main class="app-main">
           <router-view v-slot="{ Component }">
             <transition name="fade-slide" mode="out-in">
-              <component :is="Component" />
+              <component :is="Component" :key="route.fullPath" />
             </transition>
           </router-view>
         </el-main>
@@ -145,11 +165,11 @@
 import { computed, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Management, UserFilled, Bell, ArrowDown, SwitchButton, Sunny, Moon, Key, DataLine, Clock, Money, Expand, Fold, Setting, Menu, OfficeBuilding } from '@element-plus/icons-vue'
+import { Management, UserFilled, Bell, ArrowDown, SwitchButton, Sunny, Moon, Key, DataLine, Clock, Money, Expand, Fold, Setting, Menu, OfficeBuilding, HomeFilled, Document } from '@element-plus/icons-vue'
 import { useTheme } from '@/composables/useTheme'
-import { isAdmin } from '@/utils/auth'
 import { STORAGE_KEYS } from '@/utils/constants'
 import { authApi } from '@/api/auth'
+import { currentUser, hasPermission, loadUserState, clearUserState } from '@/utils/permission'
 import ChangePasswordDialog from '@/components/ChangePasswordDialog.vue'
 
 const route = useRoute()
@@ -163,10 +183,14 @@ const activeMenu = computed(() => route.path)
 
 const pageTitle = computed(() => {
   const map: Record<string, string> = {
+    '/personal': '个人中心',
+    '/role-manage': '角色管理',
     '/employee': '员工管理',
     '/organization': '组织设置',
+    '/workflow': '流程管理',
     '/dashboard': '数据看板',
-    '/attendance': '考勤管理',
+    '/attendance': isEmployeeRole.value ? '考勤打卡' : '考勤管理',
+    '/leave': isEmployeeRole.value ? '请假申请' : '请假管理',
     '/salary': '薪资社保',
     '/system': '系统设置',
     '/login': '登录',
@@ -176,36 +200,34 @@ const pageTitle = computed(() => {
 
 const pageSubtitle = computed(() => {
   const map: Record<string, string> = {
+    '/personal': isEmployeeRole.value ? '我的资料 · 考勤 · 请假' : '我的资料 · 考勤 · 薪资',
+    '/role-manage': '角色 · 权限分配',
     '/employee': '人员档案',
     '/organization': '部门 · 岗位 · 职级',
+    '/workflow': '入转调离 · 变更台账',
     '/dashboard': '核心指标',
-    '/attendance': '签到打卡',
+    '/attendance': isEmployeeRole.value ? '我的出勤记录' : '签到打卡',
+    '/leave': isEmployeeRole.value ? '我的请假记录' : '申请审批',
     '/salary': '薪资结算 · 社保配置',
     '/system': '用户管理 · 操作日志',
   }
   return map[route.path] || '首页'
 })
 
-interface UserInfo {
-  id: number
-  username: string
-  nickname: string
-  role: string
-  token: string
-}
+const userInfo = currentUser
+const isEmployeeRole = computed(() => currentUser.value?.role === 'EMPLOYEE')
+const canShowHrGroup = computed(() => hasPermission('menu:attendance') || hasPermission('menu:leave'))
+const canShowWorkflowGroup = computed(() => hasPermission(['menu:workflow', 'workflow:view', 'employee:edit', 'salary:manage']))
+const canShowSalaryGroup = computed(() => hasPermission('menu:salary'))
+const canShowSystemGroup = computed(() => hasPermission('menu:system') || hasPermission('system:role'))
 
-const userInfo = ref<UserInfo | null>(null)
-
-const loadUserInfo = () => {
-  const raw = localStorage.getItem(STORAGE_KEYS.USER)
-  userInfo.value = raw ? JSON.parse(raw) : null
-}
-
-loadUserInfo()
+// 路由变化时重新加载用户状态（登录后 localStorage 更新）
+const syncUserState = () => loadUserState()
+syncUserState()
 
 watch(
   () => route.path,
-  () => loadUserInfo()
+  () => syncUserState()
 )
 
 const handleMenuSelect = (index: string) => {
@@ -227,6 +249,7 @@ const handleCommand = (command: string) => {
         localStorage.removeItem(STORAGE_KEYS.TOKEN)
         localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
         localStorage.removeItem(STORAGE_KEYS.USER)
+        clearUserState()
         ElMessage.success('已退出登录')
         router.push('/login')
       })
@@ -235,6 +258,16 @@ const handleCommand = (command: string) => {
 }
 
 const passwordDialogVisible = ref(false)
+
+const roleMap: Record<string, string> = {
+  SUPER_ADMIN: '超级管理员',
+  HR_ADMIN: 'HR管理员',
+  HR_SPECIALIST: 'HR专员',
+  DEPT_MANAGER: '部门经理',
+  EMPLOYEE: '普通员工',
+  ADMIN: '系统管理员',
+}
+const formatRole = (role?: string) => (role ? roleMap[role] || role : '未登录')
 </script>
 
 <style scoped>
@@ -818,10 +851,42 @@ const passwordDialogVisible = ref(false)
 
 .app-main {
   padding: 0;
-  overflow: hidden;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   background: transparent;
+  min-height: 0;
+  scrollbar-gutter: stable;
+}
+
+.app-main :deep(.ems-page) {
+  width: 100%;
+}
+
+.app-main :deep(.page-header),
+.app-main :deep(.card-header),
+.app-main :deep(.section-header) {
+  min-height: 0;
+}
+
+.app-main :deep(.page-header) {
+  padding-block: 12px;
+}
+
+.app-main :deep(.search-section) {
+  padding-block: 12px;
+}
+
+.app-main :deep(.el-card__header) {
+  padding-block: 12px;
+}
+
+.app-main :deep(.el-table) {
+  font-size: 13px;
+}
+
+.app-main :deep(.el-table .cell) {
+  line-height: 1.35;
 }
 
 /* ============================ 路由切换动画 ============================ */

@@ -96,6 +96,12 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Spring Boot AOP (for @RequiresPermission aspect) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
         <!-- Caffeine 本地缓存（Redis 不可用时降级使用） -->
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>

@@ -44,7 +44,7 @@
         </div>
       </div>
       
-      <div class="node-actions" v-if="isAdmin()">
+      <div class="node-actions" v-if="hasPermission('org:manage')">
         <el-tooltip content="编辑" placement="top">
           <el-button size="small" circle :icon="Edit" @click.stop="$emit('edit', node)" />
         </el-tooltip>
@@ -78,7 +78,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { ArrowRight, FolderOpened, Folder, UserFilled, User, Plus, Edit, Delete } from '@element-plus/icons-vue'
-import { isAdmin } from '@/utils/auth'
+import { hasPermission } from '@/utils/permission'
 import type { Department } from '@/api/department'
 
 const props = defineProps<{

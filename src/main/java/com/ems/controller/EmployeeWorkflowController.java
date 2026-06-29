@@ -2,6 +2,7 @@ package com.ems.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.ems.common.RequiresPermission;
 import com.ems.common.Result;
 import com.ems.dto.WorkflowRequestDTO;
 import com.ems.entity.EmployeeWorkflowChange;
@@ -25,16 +26,19 @@ public class EmployeeWorkflowController {
     }
 
     @PostMapping("/submit")
+    @RequiresPermission({"workflow:manage", "employee:edit", "salary:manage"})
     public Result<EmployeeWorkflowChange> submit(@RequestBody WorkflowRequestDTO req) {
         return Result.success(workflowService.submit(req));
     }
 
     @PostMapping("/revoke/{id}")
+    @RequiresPermission({"workflow:manage", "employee:edit", "salary:manage"})
     public Result<Boolean> revoke(@PathVariable Long id) {
         return Result.success(workflowService.revoke(id));
     }
 
     @GetMapping("/page")
+    @RequiresPermission({"workflow:view", "employee:edit", "salary:manage"})
     public Result<IPage<EmployeeWorkflowChange>> page(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
@@ -44,6 +48,7 @@ public class EmployeeWorkflowController {
     }
 
     @GetMapping("/list-by-employee/{employeeId}")
+    @RequiresPermission({"workflow:view", "employee:detail"})
     public Result<List<EmployeeWorkflowChange>> listByEmployee(@PathVariable Long employeeId) {
         return Result.success(changeService.list(new LambdaQueryWrapper<EmployeeWorkflowChange>()
                 .eq(EmployeeWorkflowChange::getEmployeeId, employeeId)

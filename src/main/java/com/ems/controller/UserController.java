@@ -3,7 +3,7 @@ package com.ems.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ems.common.AuthContext;
 import com.ems.common.BusinessException;
-import com.ems.common.RequireRole;
+import com.ems.common.RequiresPermission;
 import com.ems.common.Result;
 import com.ems.common.RoleConstants;
 import com.ems.entity.User;
@@ -26,7 +26,7 @@ public class UserController {
     }
 
     @GetMapping("/page")
-    @RequireRole
+    @RequiresPermission("system:manage")
     public Result<IPage<User>> page(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
@@ -39,7 +39,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @RequireRole
+    @RequiresPermission("system:manage")
     public Result<User> getById(@PathVariable Long id) {
         User user = userService.getById(id);
         if (user != null) user.setPassword(null);
@@ -47,7 +47,7 @@ public class UserController {
     }
 
     @PostMapping
-    @RequireRole
+    @RequiresPermission("system:manage")
     public Result<Void> create(@RequestBody User user) {
         if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
             throw new BusinessException(400, "用户名不能为空");
@@ -69,7 +69,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @RequireRole
+    @RequiresPermission("system:manage")
     public Result<Void> update(@PathVariable Long id, @RequestBody User user) {
         User exist = userService.getById(id);
         if (exist == null) {
@@ -89,7 +89,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @RequireRole
+    @RequiresPermission("system:manage")
     public Result<Void> delete(@PathVariable Long id) {
         User exist = userService.getById(id);
         if (exist == null) {
@@ -103,7 +103,7 @@ public class UserController {
     }
 
     @PostMapping("/reset-password/{id}")
-    @RequireRole
+    @RequiresPermission("system:manage")
     public Result<Void> resetPassword(@PathVariable Long id) {
         User exist = userService.getById(id);
         if (exist == null) {

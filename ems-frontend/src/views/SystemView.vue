@@ -12,7 +12,7 @@
       </div>
       <div class="header-right">
         <template v-if="activeTab === 'users'">
-          <el-button type="primary" :icon="Plus" @click="handleAddUser">新增用户</el-button>
+          <el-button v-permission="'system:manage'" type="primary" :icon="Plus" @click="handleAddUser">新增用户</el-button>
         </template>
         <template v-else>
           <el-button :icon="RefreshRight" @click="loadLogData">刷新日志</el-button>
@@ -30,8 +30,7 @@
               </el-form-item>
               <el-form-item label="角色">
                 <el-select v-model="userQuery.role" placeholder="全部" clearable style="width: 140px" @change="loadUserData">
-                  <el-option label="管理员" value="ADMIN" />
-                  <el-option label="普通用户" value="USER" />
+                  <el-option v-for="role in roleOptions" :key="role.value" :label="role.label" :value="role.value" />
                 </el-select>
               </el-form-item>
               <el-form-item label="状态">
@@ -57,8 +56,8 @@
             <el-table-column prop="nickname" label="昵称" min-width="120" />
             <el-table-column prop="role" label="角色" width="120" align="center">
               <template #default="{ row }">
-                <el-tag :type="row.role === 'ADMIN' ? 'danger' : 'info'" effect="light" size="small" round>
-                  {{ row.role === 'ADMIN' ? '管理员' : '普通用户' }}
+                <el-tag :type="getRoleTagType(row.role)" effect="light" size="small" round>
+                  {{ formatRole(row.role) }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -218,8 +217,7 @@
         </el-form-item>
         <el-form-item label="角色" prop="role">
           <el-radio-group v-model="userForm.role">
-            <el-radio value="USER">普通用户</el-radio>
-            <el-radio value="ADMIN">管理员</el-radio>
+            <el-radio v-for="role in roleOptions" :key="role.value" :value="role.value">{{ role.label }}</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="状态" prop="status">
@@ -248,6 +246,25 @@ import { operationLogApi, type OperationLog } from '@/api/operationLog'
 import { formatDateTime } from '@/utils'
 
 const activeTab = ref('users')
+const roleOptions = [
+  { label: '超级管理员', value: 'SUPER_ADMIN' },
+  { label: 'HR管理员', value: 'HR_ADMIN' },
+  { label: 'HR专员', value: 'HR_SPECIALIST' },
+  { label: '部门经理', value: 'DEPT_MANAGER' },
+  { label: '普通员工', value: 'EMPLOYEE' },
+]
+
+const formatRole = (role?: string) => roleOptions.find(item => item.value === role)?.label || role || '-'
+const getRoleTagType = (role?: string) => {
+  const map: Record<string, string> = {
+    SUPER_ADMIN: 'danger',
+    HR_ADMIN: 'warning',
+    HR_SPECIALIST: 'primary',
+    DEPT_MANAGER: 'success',
+    EMPLOYEE: 'info',
+  }
+  return role ? map[role] || 'info' : 'info'
+}
 
 const userLoading = ref(false)
 const userTableData = ref<UserItem[]>([])
@@ -267,7 +284,7 @@ const userFormRef = ref<FormInstance>()
 const userForm = reactive<UserItem & { password?: string }>({
   username: '',
   nickname: '',
-  role: 'USER',
+  role: 'EMPLOYEE',
   status: 1,
   password: '',
 })
@@ -322,7 +339,7 @@ const handleAddUser = () => {
   isEditUser.value = false
   userForm.username = ''
   userForm.nickname = ''
-  userForm.role = 'USER'
+  userForm.role = 'EMPLOYEE'
   userForm.status = 1
   userForm.password = ''
   userDialogVisible.value = true

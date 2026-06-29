@@ -1,5 +1,6 @@
 package com.ems.controller;
 
+import com.ems.common.RequiresPermission;
 import com.ems.common.Result;
 import com.ems.service.DashboardService;
 import com.ems.vo.DashboardVO;
@@ -18,6 +19,7 @@ public class DashboardController {
     }
 
     @GetMapping("/overview")
+    @RequiresPermission("dashboard:view")
     public Result<DashboardVO> overview() {
         return Result.success(dashboardService.loadDashboard());
     }

@@ -7,10 +7,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ems.common.BusinessException;
 import com.ems.common.JwtUtil;
 import com.ems.common.RoleConstants;
+import com.ems.entity.Employee;
 import com.ems.entity.User;
 import com.ems.mapper.UserMapper;
 import com.ems.service.LoginAttemptService;
 import com.ems.service.OperationLogService;
+import com.ems.service.RoleService;
 import com.ems.service.TokenBlacklistService;
 import com.ems.service.UserService;
 import com.ems.vo.UserInfoVO;
@@ -26,16 +28,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService tokenBlacklistService;
     private final LoginAttemptService loginAttemptService;
+    private final RoleService roleService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Autowired
     private OperationLogService operationLogService;
 
     public UserServiceImpl(JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService,
-                           LoginAttemptService loginAttemptService) {
+                           LoginAttemptService loginAttemptService, RoleService roleService) {
         this.jwtUtil = jwtUtil;
         this.tokenBlacklistService = tokenBlacklistService;
         this.loginAttemptService = loginAttemptService;
+        this.roleService = roleService;
     }
 
     @PostConstruct
@@ -93,17 +97,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         loginAttemptService.loginSuccess(username);
 
+        // 规范化角色编码（兼容旧数据）
+        String normalizedRole = normalizeRole(user.getRole());
+
+        // 加载权限列表
+        java.util.List<String> permissions = roleService.getPermissionCodesByRoleCode(normalizedRole);
+        if (permissions == null) permissions = new java.util.ArrayList<>();
+
         int version = tokenBlacklistService.getNextUserVersion(user.getId());
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole(), version);
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), normalizedRole, version, permissions);
         String refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getUsername());
         UserInfoVO vo = new UserInfoVO();
         vo.setId(user.getId());
         vo.setUsername(user.getUsername());
         vo.setNickname(user.getNickname());
-        vo.setRole(user.getRole());
+        vo.setEmployeeId(user.getEmployeeId());
+        vo.setRole(normalizedRole);
+        vo.setPermissions(permissions);
         vo.setToken(token);
         vo.setRefreshToken(refreshToken);
         return vo;
+    }
+
+    /**
+     * 规范化角色编码（兼容数据库中存储的旧值）
+     */
+    private String normalizeRole(String role) {
+        if (role == null) return RoleConstants.EMPLOYEE;
+        if ("admin".equalsIgnoreCase(role) || "ADMIN".equals(role)) return RoleConstants.SUPER_ADMIN;
+        if ("user".equalsIgnoreCase(role) || "USER".equals(role)) return RoleConstants.EMPLOYEE;
+        return role;
     }
 
     @Override
@@ -111,6 +134,61 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, username);
         return this.getOne(wrapper);
+    }
+
+    @Override
+    public User ensureDefaultEmployeeAccount(Employee employee) {
+        if (employee == null || employee.getId() == null || !StringUtils.hasText(employee.getName())) {
+            return null;
+        }
+
+        User existing = this.getOne(new LambdaQueryWrapper<User>()
+                .eq(User::getEmployeeId, employee.getId())
+                .last("LIMIT 1"));
+        if (existing != null) {
+            existing.setNickname(employee.getName());
+            if (!StringUtils.hasText(existing.getRole())) {
+                existing.setRole(RoleConstants.EMPLOYEE);
+            }
+            if (existing.getStatus() == null) {
+                existing.setStatus(1);
+            }
+            this.updateById(existing);
+            return existing;
+        }
+
+        User user = new User();
+        user.setUsername(resolveDefaultEmployeeUsername(employee));
+        user.setPassword(passwordEncoder.encode("123456"));
+        user.setNickname(employee.getName());
+        user.setEmployeeId(employee.getId());
+        user.setDeptDataScope(0);
+        user.setRole(RoleConstants.EMPLOYEE);
+        user.setStatus(1);
+        user.setRemark("员工档案创建时自动生成，默认密码：123456");
+        this.save(user);
+        return user;
+    }
+
+    private String resolveDefaultEmployeeUsername(Employee employee) {
+        String base = employee.getName().trim();
+        User sameNameUser = getByUsername(base);
+        if (sameNameUser == null || employee.getId().equals(sameNameUser.getEmployeeId())) {
+            return base;
+        }
+
+        String suffix = StringUtils.hasText(employee.getEmployeeNo())
+                ? employee.getEmployeeNo()
+                : String.valueOf(employee.getId());
+        String candidate = base + "_" + suffix;
+        int seq = 1;
+        while (true) {
+            User user = getByUsername(candidate);
+            if (user == null || employee.getId().equals(user.getEmployeeId())) {
+                return candidate;
+            }
+            candidate = base + "_" + suffix + "_" + seq++;
+        }
     }
 
     @Override

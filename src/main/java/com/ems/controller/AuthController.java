@@ -8,6 +8,7 @@ import com.ems.dto.RefreshTokenDTO;
 import com.ems.entity.User;
 import com.ems.interceptor.LoginInterceptor;
 import com.ems.service.OperationLogService;
+import com.ems.service.RoleService;
 import com.ems.service.TokenBlacklistService;
 import com.ems.service.UserService;
 import com.ems.vo.UserInfoVO;
@@ -17,6 +18,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -27,14 +29,17 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService tokenBlacklistService;
     private final OperationLogService operationLogService;
+    private final RoleService roleService;
 
     public AuthController(UserService userService, JwtUtil jwtUtil,
                           TokenBlacklistService tokenBlacklistService,
-                          OperationLogService operationLogService) {
+                          OperationLogService operationLogService,
+                          RoleService roleService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.tokenBlacklistService = tokenBlacklistService;
         this.operationLogService = operationLogService;
+        this.roleService = roleService;
     }
 
     @PostMapping("/login")
@@ -76,21 +81,34 @@ public class AuthController {
             return Result.error(400, "用户不存在或已被禁用");
         }
 
+        // 从数据库读取最新角色，刷新令牌中不存储 role
+        String normalizedRole = normalizeRole(user.getRole());
+        List<String> permissions = roleService.getPermissionCodesByRoleCode(normalizedRole);
+
         Long expirationTime = claims.getExpiration().getTime();
         tokenBlacklistService.invalidateRefreshToken(refreshToken, expirationTime);
 
         int version = tokenBlacklistService.getNextUserVersion(userId);
-        String newToken = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole(), version);
-        String newRefreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getUsername());
+        String newToken = jwtUtil.generateToken(userId, username, normalizedRole, version, permissions);
+        String newRefreshToken = jwtUtil.generateRefreshToken(userId, username);
 
         UserInfoVO vo = new UserInfoVO();
         vo.setId(user.getId());
         vo.setUsername(user.getUsername());
         vo.setNickname(user.getNickname());
-        vo.setRole(user.getRole());
+        vo.setEmployeeId(user.getEmployeeId());
+        vo.setRole(normalizedRole);
+        vo.setPermissions(permissions);
         vo.setToken(newToken);
         vo.setRefreshToken(newRefreshToken);
         return Result.success(vo);
+    }
+
+    private String normalizeRole(String role) {
+        if (role == null) return "EMPLOYEE";
+        if ("admin".equalsIgnoreCase(role) || "ADMIN".equals(role)) return "SUPER_ADMIN";
+        if ("user".equalsIgnoreCase(role) || "USER".equals(role)) return "EMPLOYEE";
+        return role;
     }
 
     @PostMapping("/logout")

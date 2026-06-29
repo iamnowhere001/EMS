@@ -13,8 +13,11 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtUtil {
@@ -61,14 +64,22 @@ public class JwtUtil {
     }
 
     public String generateToken(Long userId, String username, String role, int version) {
+        return generateToken(userId, username, role, version, null);
+    }
+
+    public String generateToken(Long userId, String username, String role, int version, List<String> permissions) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + this.expiration);
-        return Jwts.builder()
+        io.jsonwebtoken.JwtBuilder builder = Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("username", username)
                 .claim("role", role)
                 .claim(CLAIM_TYPE, TYPE_ACCESS)
-                .claim("ver", version)
+                .claim("ver", version);
+        if (permissions != null && !permissions.isEmpty()) {
+            builder.claim("perms", String.join(",", permissions));
+        }
+        return builder
                 .issuedAt(now)
                 .expiration(exp)
                 .signWith(key())
@@ -162,6 +173,17 @@ public class JwtUtil {
 
     public long getRefreshExpiration() {
         return refreshExpiration;
+    }
+
+    public List<String> getPermissionsFromToken(String token) {
+        try {
+            Claims claims = parseToken(token);
+            String perms = claims.get("perms", String.class);
+            if (perms == null || perms.isEmpty()) return java.util.Collections.emptyList();
+            return java.util.Arrays.asList(perms.split(","));
+        } catch (Exception e) {
+            return java.util.Collections.emptyList();
+        }
     }
 
     public Date getExpirationDate(String token) {

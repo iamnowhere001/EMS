@@ -214,12 +214,16 @@ CREATE TABLE IF NOT EXISTS `sys_user` (
     `username` VARCHAR(50) NOT NULL COMMENT '用户名',
     `password` VARCHAR(100) NOT NULL COMMENT '密码',
     `nickname` VARCHAR(50) DEFAULT NULL COMMENT '昵称',
-    `role` VARCHAR(20) DEFAULT 'USER' COMMENT '角色：ADMIN-管理员，USER-普通用户',
+    `employee_id` BIGINT DEFAULT NULL COMMENT '关联员工ID',
+    `dept_data_scope` TINYINT DEFAULT 0 COMMENT '数据权限：0=仅本人，1=本部门，2=本部门及下级，3=全部',
+    `remark` VARCHAR(255) DEFAULT NULL COMMENT '备注',
+    `role` VARCHAR(20) DEFAULT 'EMPLOYEE' COMMENT '角色编码',
     `status` TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_username` (`username`)
+    UNIQUE KEY `uk_username` (`username`),
+    UNIQUE KEY `uk_sys_user_employee_id` (`employee_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统用户表';
 
 CREATE TABLE IF NOT EXISTS `operation_log` (
@@ -285,6 +289,28 @@ CREATE TABLE IF NOT EXISTS `employee_attendance` (
     UNIQUE KEY `uk_emp_date` (`employee_id`, `attendance_date`),
     KEY `idx_attendance_date` (`attendance_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='员工考勤记录表';
+
+-- Phase 4 请假管理：请假申请表
+CREATE TABLE IF NOT EXISTS `leave_request` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '请假记录ID',
+    `employee_id` BIGINT NOT NULL COMMENT '员工ID',
+    `leave_type` VARCHAR(20) NOT NULL COMMENT '请假类型：年假、病假、事假、婚假、产假、陪产假、丧假、其他',
+    `start_date` DATE NOT NULL COMMENT '开始日期',
+    `end_date` DATE NOT NULL COMMENT '结束日期',
+    `days` DECIMAL(4,1) NOT NULL COMMENT '请假天数',
+    `reason` VARCHAR(500) DEFAULT NULL COMMENT '请假事由',
+    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0=待审批，1=已批准，2=已拒绝，3=已撤销',
+    `approver_id` BIGINT DEFAULT NULL COMMENT '审批人ID',
+    `approve_remark` VARCHAR(500) DEFAULT NULL COMMENT '审批备注',
+    `approve_time` DATETIME DEFAULT NULL COMMENT '审批时间',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `deleted` TINYINT DEFAULT 0 COMMENT '逻辑删除：0=未删除，1=已删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_employee_id` (`employee_id`),
+    KEY `idx_status` (`status`),
+    KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='请假申请表';
 
 -- Phase 4 薪资结构：薪资模板表
 CREATE TABLE IF NOT EXISTS `salary_structure` (
@@ -379,4 +405,3 @@ INSERT INTO `sys_dictionary` (`type`, `code`, `name`, `sort`, `parent_code`) VAL
 ('rank', 'P7', 'P7', 3, NULL),
 ('rank', 'P8', 'P8', 4, NULL)
 ON DUPLICATE KEY UPDATE `name` = `name`, `parent_code` = VALUES(`parent_code`);
-

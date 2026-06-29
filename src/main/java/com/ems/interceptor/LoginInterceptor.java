@@ -49,6 +49,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         Long userId = Long.valueOf(claims.getSubject());
         String username = claims.get("username", String.class);
         String role = claims.get("role", String.class);
+        java.util.List<String> permissions = jwtUtil.getPermissionsFromToken(token);
 
         Integer revokedVersion = tokenBlacklistService.getRevokedUserVersion(userId);
         if (revokedVersion != null) {
@@ -61,8 +62,9 @@ public class LoginInterceptor implements HandlerInterceptor {
             }
         }
 
-        AuthContext.set(userId, username, role);
+        AuthContext.set(userId, username, role, permissions);
         request.setAttribute("role", role);
+        request.setAttribute("permissions", permissions);
 
         String clientIp = resolveClientIp(request);
         AuthContext.setIp(clientIp);

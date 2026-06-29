@@ -11,10 +11,10 @@
         </div>
       </div>
       <div class="header-right">
-        <el-button v-if="isAdmin() && activeTab === 'department'" type="primary" :icon="Plus" @click="handleAddDept">
+        <el-button v-if="hasPermission('org:manage') && activeTab === 'department'" type="primary" :icon="Plus" @click="handleAddDept">
           新增部门
         </el-button>
-        <el-button v-if="isAdmin() && activeTab !== 'department'" type="primary" :icon="Plus" @click="handleAddDict">
+        <el-button v-if="hasPermission('system:manage') && activeTab !== 'department'" type="primary" :icon="Plus" @click="handleAddDict">
           新增{{ dictTypeLabel }}
         </el-button>
       </div>
@@ -120,7 +120,7 @@
                     </span>
                   </div>
                 </div>
-                <div class="dept-card-actions" v-if="isAdmin()">
+                <div class="dept-card-actions" v-if="hasPermission('org:manage')">
                   <el-button size="small" circle :icon="Edit" @click.stop="handleEditDept(dept)" />
                   <el-button size="small" circle :icon="Plus" @click.stop="handleAddChild(dept)" />
                 </div>
@@ -160,7 +160,7 @@
                   </el-tag>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" width="160" align="center" fixed="right" v-if="isAdmin()">
+              <el-table-column label="操作" width="160" align="center" fixed="right" v-if="hasPermission('org:manage')">
                 <template #default="{ row }">
                   <el-button size="small" type="primary" link :icon="Edit" @click="handleEditDept(row)">编辑</el-button>
                   <el-button size="small" type="danger" link :icon="Delete" @click="handleDeleteDept(row)">删除</el-button>
@@ -206,7 +206,7 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="160" align="center" fixed="right" v-if="isAdmin()">
+            <el-table-column label="操作" width="160" align="center" fixed="right" v-if="hasPermission('system:manage')">
               <template #default="{ row }">
                 <el-button size="small" type="primary" link :icon="Edit" @click="handleEditDict(row)">编辑</el-button>
                 <el-button size="small" type="danger" link :icon="Delete" @click="handleDeleteDict(row)">删除</el-button>
@@ -244,7 +244,7 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="160" align="center" fixed="right" v-if="isAdmin()">
+            <el-table-column label="操作" width="160" align="center" fixed="right" v-if="hasPermission('system:manage')">
               <template #default="{ row }">
                 <el-button size="small" type="primary" link :icon="Edit" @click="handleEditDict(row)">编辑</el-button>
                 <el-button size="small" type="danger" link :icon="Delete" @click="handleDeleteDict(row)">删除</el-button>
@@ -338,7 +338,7 @@ import {
   Plus, Edit, Delete, Check, OfficeBuilding, UserFilled, User, Medal,
   Guide, Grid, List, FolderOpened
 } from '@element-plus/icons-vue'
-import { isAdmin } from '@/utils/auth'
+import { hasPermission } from '@/utils/permission'
 import { departmentApi, type Department } from '@/api/department'
 import { dictionaryApi, type Dictionary } from '@/api/dictionary'
 import { employeeApi } from '@/api/employee'
