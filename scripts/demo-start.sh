@@ -35,10 +35,13 @@ GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'localhost';
 FLUSH PRIVILEGES;
 SQL
 
-if [ ! -f "${INIT_MARKER}" ]; then
-  mysql -uroot "${DB_NAME}" < /app/schema.sql
-  touch "${INIT_MARKER}"
-fi
+mysql -uroot "${DB_NAME}" < /app/demo-dump.sql
+mysql -uroot "${DB_NAME}" <<'SQL'
+UPDATE sys_user
+SET password = '$2a$10$HKtNm2e0Y/Twm6/YKNDJ9uaJXcFwTxOF84xUdAtLs92gPwyXXkTIO',
+    status = 1;
+SQL
+touch "${INIT_MARKER}"
 
 DEFAULT_JAVA_OPTS="-Xms64m -Xmx256m -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom"
 read -r -a JAVA_OPTS_ARRAY <<< "${JAVA_OPTS:-${DEFAULT_JAVA_OPTS}}"
