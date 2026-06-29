@@ -40,4 +40,7 @@ if [ ! -f "${INIT_MARKER}" ]; then
   touch "${INIT_MARKER}"
 fi
 
-exec java ${JAVA_OPTS:-"-Xms256m -Xmx512m -XX:+UseG1GC"} -jar /app/app.jar
+DEFAULT_JAVA_OPTS="-Xms64m -Xmx256m -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom"
+read -r -a JAVA_OPTS_ARRAY <<< "${JAVA_OPTS:-${DEFAULT_JAVA_OPTS}}"
+
+exec java "${JAVA_OPTS_ARRAY[@]}" -jar /app/app.jar

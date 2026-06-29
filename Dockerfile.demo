@@ -43,7 +43,8 @@ ENV SPRING_PROFILES_ACTIVE=prod \
     CACHE_REDIS_ENABLED=false \
     MANAGEMENT_HEALTH_REDIS_ENABLED=false \
     JWT_SECRET=ems-demo-jwt-secret-change-after-deployment-2026 \
-    ENCRYPTION_KEY=emsdemoaeskey2026062900000000000
+    ENCRYPTION_KEY=emsdemoaeskey2026062900000000000 \
+    JAVA_OPTS="-Xms64m -Xmx256m -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom"
 
 EXPOSE 8080
 
