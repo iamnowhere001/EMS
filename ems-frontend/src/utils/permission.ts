@@ -3,8 +3,7 @@
  * 使用响应式 ref 跟踪用户权限，确保菜单等 UI 在登录/登出后自动更新
  */
 import { ref } from 'vue'
-
-const STORAGE_KEY = 'ems_user'
+import { STORAGE_KEYS } from '@/utils/constants'
 
 export interface UserInfo {
   id: number
@@ -24,7 +23,7 @@ export const currentPermissions = ref<string[]>([])
 /** 从 localStorage 加载用户信息到响应式状态 */
 export function loadUserState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(STORAGE_KEYS.USER)
     currentUser.value = raw ? JSON.parse(raw) : null
   } catch {
     currentUser.value = null
