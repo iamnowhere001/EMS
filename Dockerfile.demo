@@ -1,0 +1,50 @@
+FROM node:20-alpine AS frontend-build
+
+WORKDIR /frontend
+
+COPY ems-frontend/package*.json ./
+RUN npm ci
+
+COPY ems-frontend ./
+RUN npm run build
+
+FROM maven:3.9-eclipse-temurin-17 AS backend-build
+
+WORKDIR /app
+
+COPY pom.xml ./
+RUN mvn -q -DskipTests dependency:go-offline
+
+COPY src ./src
+COPY --from=frontend-build /frontend/dist ./src/main/resources/static
+RUN mvn -DskipTests package
+
+FROM eclipse-temurin:17-jre-jammy
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends mariadb-server mariadb-client curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=backend-build /app/target/employee-management-system-1.0.0.jar /app/app.jar
+COPY src/main/resources/db/schema.sql /app/schema.sql
+COPY scripts/demo-start.sh /app/demo-start.sh
+
+RUN chmod +x /app/demo-start.sh
+
+ENV SPRING_PROFILES_ACTIVE=prod \
+    SERVER_PORT=8080 \
+    DB_HOST=127.0.0.1 \
+    DB_PORT=3306 \
+    DB_NAME=ems_db \
+    DB_USERNAME=ems_user \
+    DB_PASSWORD=ems_password \
+    CACHE_REDIS_ENABLED=false \
+    MANAGEMENT_HEALTH_REDIS_ENABLED=false \
+    JWT_SECRET=ems-demo-jwt-secret-change-after-deployment-2026 \
+    ENCRYPTION_KEY=emsdemoaeskey2026062900000000000
+
+EXPOSE 8080
+
+CMD ["/app/demo-start.sh"]

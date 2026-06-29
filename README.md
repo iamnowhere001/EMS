@@ -237,6 +237,18 @@ docker-compose ps
 
 Docker Compose 会启动 MySQL、Redis 和后端服务。前端开发服务仍建议在 `ems-frontend` 下用 `npm run dev` 启动。
 
+### 免费线上 Demo
+
+仓库已提供 Render 免费部署配置，适合生成一个可直接访问体验的公开链接：
+
+```text
+Dockerfile.demo
+render.yaml
+docs/free-deploy.md
+```
+
+部署完成后，Render 会生成类似 `https://ems-demo.onrender.com` 的访问地址。详细步骤见 [免费线上 Demo 部署](docs/free-deploy.md)。
+
 ## 测试账号
 
 默认密码均为 `123456`。

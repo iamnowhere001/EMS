@@ -9,8 +9,10 @@ interface RequestInstance extends AxiosInstance {
   delete<T = any, R = T, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R>
 }
 
+const apiBaseURL = import.meta.env.VITE_API_BASE_URL || '/api'
+
 const request = axios.create({
-  baseURL: '/api',
+  baseURL: apiBaseURL,
   timeout: 10000,
 }) as RequestInstance
 
@@ -23,7 +25,7 @@ const refreshToken = async (): Promise<string> => {
     throw new Error('无刷新令牌')
   }
 
-  const response = await axios.post('/api/auth/refresh', { refreshToken })
+  const response = await axios.post(`${apiBaseURL}/auth/refresh`, { refreshToken })
   const data = response.data
   if (data.code !== 200) {
     throw new Error(data.message || '刷新令牌失败')

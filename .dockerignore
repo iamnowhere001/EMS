@@ -1,0 +1,9 @@
+node_modules
+ems-frontend/node_modules
+target
+ems-frontend/dist
+.git
+.idea
+.vscode
+logs
+*.log

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: ems-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.demo
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: CACHE_REDIS_ENABLED
+        value: false
+      - key: MANAGEMENT_HEALTH_REDIS_ENABLED
+        value: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        value: emsdemoaeskey2026062900000000000
