@@ -84,9 +84,9 @@
             </el-form-item>
           </el-form>
           <div class="login-tips">
-            员工账号：<span>安之</span> · 密码：<span>123456</span>
+            默认账号：<span>superadmin</span> · 密码：<span>123456</span>
             <br />
-            管理账号：<span>superadmin</span> / <span>hradmin</span> / <span>deptmanager</span>
+            其他账号：<span>hradmin</span> / <span>deptmanager</span> / <span>安之</span>
           </div>
         </div>
       </div>
@@ -117,7 +117,7 @@ const features = [
 ]
 
 const form = reactive({
-  username: '安之',
+  username: 'superadmin',
   password: '123456',
 })
 
